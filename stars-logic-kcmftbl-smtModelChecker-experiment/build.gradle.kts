@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-val experimentClass = "SmtDistinctPerformanceTestKt"
-
 plugins {
   id("tools.aqua.stars.library-conventions")
   application
 }
+
+val experimentClass = "SmtDistinctPerformanceTestKt"
 
 application {
   mainClass.set("tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments.$experimentClass")

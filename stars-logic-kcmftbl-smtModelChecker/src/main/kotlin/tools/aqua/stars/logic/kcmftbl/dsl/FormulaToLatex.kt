@@ -51,7 +51,7 @@ private fun Formula.str(): String {
   return when (f) {
     is Always -> "□_{${f.interval.str()}}(${f.inner.str()})"
     is And -> "(${f.lhs.str()})\\land (${f.rhs.str()})"
-    is Binding<*> -> "↓_${f.ccb.str()}^{${f.bindTerm.str()}}(${f.inner.str()})"
+    is Binding<*> -> "↓_{${f.ccb.str()}}^{${f.bindTerm.str()}}(${f.inner.str()})"
     is Eq<*> -> "${f.lhs.str()}=${f.rhs.str()}"
     is Eventually -> "♢_{${f.interval.str()}}(${f.inner.str()})"
     is Exists<*> -> "\\exists ${f.ccb.str()}:(${f.inner.str()})"

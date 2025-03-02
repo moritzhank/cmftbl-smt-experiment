@@ -31,7 +31,7 @@ abstract class SmtTranslatableBase {
 
   private var _smtID: Int? = null
 
-  internal fun getSmtID(): Int {
+  fun getSmtID(): Int {
     var smtID = _smtID
     if (smtID == null) {
       smtID = uniqueSmtID()

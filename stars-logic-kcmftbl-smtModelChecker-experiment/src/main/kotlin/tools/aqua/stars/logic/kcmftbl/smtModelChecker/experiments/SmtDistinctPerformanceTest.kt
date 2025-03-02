@@ -19,6 +19,10 @@
 
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 
+import java.io.File
+import java.util.Locale
+import kotlin.math.pow
+import kotlin.time.Duration
 import oshi.SystemInfo
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.SmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.MemoryProfiler
@@ -27,10 +31,6 @@ import tools.aqua.stars.logic.kcmftbl.smtModelChecker.runSmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.getDateTimeString
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.linSpaceArr
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.smtSolverVersion
-import java.io.File
-import java.util.Locale
-import kotlin.math.pow
-import kotlin.time.Duration
 
 private val resultFolderName =
     getAbsolutePathFromProjectDir("experiment${File.separator}smtDistinctPerf")
@@ -41,7 +41,7 @@ fun main() {
   val rangeOfDistinctStatements = linSpaceArr(2, 3000, 30)
   val rangeOfDistinctStatementsZ3 = linSpaceArr(3000, 10_0000, 30)
 
-  //val resultFileCVC5 = runCVC5Experiment(rangeOfDistinctStatements, 3)
+  // val resultFileCVC5 = runCVC5Experiment(rangeOfDistinctStatements, 3)
   val resultFileZ3 = runCVC5Experiment(rangeOfDistinctStatements.dropLast(25), 1)
 
   /*
@@ -91,8 +91,8 @@ private fun runCVC5Experiment(rangeOfDistinctStatements: List<Int>, repetitions:
 val memProfilerCond: (MemoryProfiler) -> Boolean = { memProfiler ->
   println("${memProfiler.numSamples} | ${memProfiler.elapsedMillis}")
   memProfiler.maxProcMemUsageBytes != -1L &&
-  memProfiler.maxSysMemUsagePercent != -1.0 &&
-  memProfiler.numSamples > 10
+      memProfiler.maxSysMemUsagePercent != -1.0 &&
+      memProfiler.numSamples > 10
 }
 
 /** @return Path to the resulting CSV file */
@@ -112,7 +112,8 @@ private fun runExperiment(
           runSmtSolver(smtLib, solver, true, *solverArgs) { pid ->
             val memProfiler = MemoryProfiler.start(pid.toInt())
             if (memProfilerCond(memProfiler)) {
-              memoryStats[i][j] = Pair(memProfiler.maxSysMemUsagePercent, memProfiler.maxProcMemUsageBytes)
+              memoryStats[i][j] =
+                  Pair(memProfiler.maxSysMemUsagePercent, memProfiler.maxProcMemUsageBytes)
             }
           }
       results[i][j] = extractDurationFromOutput(result).inWholeMilliseconds
