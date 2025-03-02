@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0" }
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0" }
 /*
  * Copyright 2021-2024 The STARS Project Authors
  * SPDX-License-Identifier: Apache-2.0
