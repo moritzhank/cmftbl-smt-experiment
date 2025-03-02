@@ -29,7 +29,7 @@ mavenMetadata {
 dependencies {
   implementation(project(":stars-core"))
   implementation(project(":stars-logic-kcmftbl-smtModelChecker"))
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.0")
   testImplementation(project(":stars-logic-kcmftbl"))
 }
 

@@ -41,7 +41,7 @@ dependencies {
   implementation(project(":stars-logic-kcmftbl-smtModelChecker"))
   implementation(project(":stars-data-av"))
   implementation(project(":stars-importer-carla"))
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
   implementation("com.github.oshi:oshi-core:6.6.5")
 }
