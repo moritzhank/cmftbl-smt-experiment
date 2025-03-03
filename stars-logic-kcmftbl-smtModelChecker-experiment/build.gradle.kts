@@ -18,6 +18,7 @@
 plugins {
   id("tools.aqua.stars.library-conventions")
   application
+  kotlin("plugin.serialization") version "2.0.20"
 }
 
 val experimentClass = "SmtDistinctPerformanceTestKt"
@@ -42,6 +43,7 @@ dependencies {
   implementation(project(":stars-data-av"))
   implementation(project(":stars-importer-carla"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
   implementation("com.github.oshi:oshi-core:6.6.5")
 }
