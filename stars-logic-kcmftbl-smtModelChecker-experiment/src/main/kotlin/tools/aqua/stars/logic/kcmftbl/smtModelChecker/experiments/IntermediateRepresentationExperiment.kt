@@ -17,7 +17,6 @@
 
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 
-import kotlin.time.measureTime
 import kotlinx.serialization.modules.EmptySerializersModule
 import tools.aqua.stars.data.av.dataclasses.Segment
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.ExperimentLoader
@@ -27,6 +26,7 @@ import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.SmtInterme
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.generateSmtLib
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.getSmtIntermediateRepresentation
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.runSmtSolver
+import kotlin.time.measureTime
 
 fun main() {
   // Options
@@ -47,9 +47,14 @@ fun main() {
     translationWrapper = SmtDataTranslationWrapper(intermediateRepresentation)
   }
   println("Duration of generation of SmtDataTranslationWrapper: $translationWrapperTime")
+
+  val firstTickDataId = translationWrapper.smtIDToExternalID[t.tickData.first().getSmtID()]!!
+
   var smtLib: String
   val smtLibTime = measureTime { smtLib = generateSmtLib(translationWrapper) }
   smtLib += "(check-sat)"
+  smtLib = ";Town_01, seed 2, segment 1" + System.lineSeparator() + smtLib
+  smtLib = ";firstTickDataId: $firstTickDataId" + System.lineSeparator() + smtLib
   println("Duration of generation of SMT-LIB: $smtLibTime")
   println("Generated SmtLib lines: ${smtLib.lines().size}")
   val statsOption = if (solver == SmtSolver.Z3) "-st" else "--stats"
