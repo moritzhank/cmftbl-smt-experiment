@@ -29,6 +29,14 @@ enum class SmtSolver(val solverName: String) {
   Z3("z3")
 }
 
+/** Save the SMT-program [program] in a file. */
+fun saveSmtFile(program: String, solver: SmtSolver = SmtSolver.CVC5) {
+  val smtTmpDirPath = getAbsolutePathFromProjectDir("smtTmp")
+  File(smtTmpDirPath).mkdir()
+  val smt2FilePath = "$smtTmpDirPath${File.separator}${UUID.randomUUID()}.smt2"
+  val smt2File = File(smt2FilePath).apply { writeText(program) }
+}
+
 /** Run a local SMT-Solver instance. This requires a correct setup of "smtSolverSettings.json". */
 fun runSmtSolver(
     program: String,

@@ -1,3 +1,20 @@
+/*
+ * Copyright 2025 The STARS Project Authors
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -33,8 +50,8 @@ val hasMidTrafficDensity = formula { v: CCB<Vehicle> ->
   minPrevalence(0.6) {
     val block = v * Vehicle::lane * Lane::road * Road::block
     val numVehicles =
-      term(
-        (v * Vehicle::tickData * TickData::vehiclesInBlock).withParam(block) *
+        term(
+            (v * Vehicle::tickData * TickData::vehiclesInBlock).withParam(block) *
                 List<Vehicle>::size)
     const(6) leq numVehicles and (numVehicles leq const(15))
   }
@@ -43,16 +60,20 @@ val ast = hasMidTrafficDensity(CCB<Vehicle>().apply { debugInfo = "v" })
 
 fun main() {
   val seg: Segment = ExperimentLoader.loadTestSegment()
-  //val primaryEntity = seg.tickData.first().vehicles.find { it.id == seg.primaryEntityId }
+  // val primaryEntity = seg.tickData.first().vehicles.find { it.id == seg.primaryEntityId }
   val serializersModule = EmptySerializersModule()
   var intermediateRepresentation = getSmtIntermediateRepresentation(serializersModule, seg)
-  val translationWrapper = SmtDataTranslationWrapper(intermediateRepresentation)
+  val translationWrapper =
+      SmtDataTranslationWrapper(intermediateRepresentation, seg.tickData.toTypedArray())
 
-
-  val y = intermediateRepresentation.find { it.ref is Vehicle && (it.ref as Vehicle).id == seg.primaryEntityId }!!.ref.getSmtID()
+  val y =
+      intermediateRepresentation
+          .find { it.ref is Vehicle && (it.ref as Vehicle).id == seg.primaryEntityId }!!
+          .ref
+          .getSmtID()
   val z = translationWrapper.smtIDToExternalID[y]
 
-
-  val x = (((ast.getPhi().first() as MinPrevalence).inner as And).lhs as Leq<*>).rhs as Variable<Int>
+  val x =
+      (((ast.getPhi().first() as MinPrevalence).inner as And).lhs as Leq<*>).rhs as Variable<Int>
   translateVariable(x, intermediateRepresentation)
 }

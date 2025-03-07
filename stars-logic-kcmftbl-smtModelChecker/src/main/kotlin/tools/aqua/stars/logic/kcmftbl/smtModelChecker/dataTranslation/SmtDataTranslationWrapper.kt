@@ -19,8 +19,14 @@ package tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation
 
 import kotlin.reflect.KClass
 
-/** Groups IDs of [SmtIntermediateRepresentation] by type/sort. */
-class SmtDataTranslationWrapper(intermediateRepresentation: List<SmtIntermediateRepresentation>) {
+/**
+ * Groups IDs of [SmtIntermediateRepresentation] by type/sort. In addition to that information of
+ * ticks and their order is stored.
+ */
+class SmtDataTranslationWrapper(
+    intermediateRepresentation: List<SmtIntermediateRepresentation>,
+    val listOfChronologicalTicks: Array<SmtTranslatableBase>
+) {
 
   /** Maps member names to the associated [SmtIntermediateMember]s with SMT-IDs of the parent. */
   val memberNameToSmtIntermediateMember =

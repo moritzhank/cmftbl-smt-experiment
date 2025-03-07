@@ -1,18 +1,33 @@
+/*
+ * Copyright 2025 The STARS Project Authors
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments.reference
 
+import kotlin.time.measureTime
 import tools.aqua.stars.carla.experiments.rightOvertaking
 import tools.aqua.stars.core.evaluation.PredicateContext
 import tools.aqua.stars.core.evaluation.UnaryPredicate.Companion.predicate
 import tools.aqua.stars.data.av.dataclasses.Vehicle
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.ExperimentLoader
-import kotlin.time.measureTime
 
-val hasV0EverBeenOvertakenFromRight = predicate(Vehicle::class) { ctx, v0 ->
-  v0.tickData.vehicles.any { v1 ->
-    v0 != v1 &&
-    rightOvertaking.holds(ctx, v1, v0)
-  }
-}
+val hasV0EverBeenOvertakenFromRight =
+    predicate(Vehicle::class) { ctx, v0 ->
+      v0.tickData.vehicles.any { v1 -> v0 != v1 && rightOvertaking.holds(ctx, v1, v0) }
+    }
 
 fun main() {
   ExperimentLoader.getSeeds("10HD").forEach { seed ->
@@ -32,7 +47,7 @@ fun main() {
           predHolds = hasV0EverBeenOvertakenFromRight.holds(PredicateContext(seg), vehicle)
         }
         println("PredHolds: $predHolds; $time")
-        if(predHolds) {
+        if (predHolds) {
           return
         }
         println()

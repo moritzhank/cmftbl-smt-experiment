@@ -60,7 +60,7 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
                 "id",
                 { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component1()]!!}" },
                 { thenEntry ->
-                  "${(thenEntry.component2() as SmtIntermediateMember.Reference).refID}"
+                  "${wrapper.smtIDToExternalID[(thenEntry.component2() as SmtIntermediateMember.Reference).refID]!!}"
                 },
                 "-1")
         result.appendLine("(define-fun ${name.firstCharLower()} ((id Int)) Int $iteStructure)")
@@ -89,11 +89,13 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
         val iteStructure =
             generateEqualsITEStructure(
                 smtIntermediateMember.entries,
-                "listId",
+                "id",
                 { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component1()]!!}" },
-                { thenEntry -> "${(thenEntry.component2() as SmtIntermediateMember.List).refID}" },
+                { thenEntry ->
+                  "${wrapper.smtIDToExternalID[(thenEntry.component2() as SmtIntermediateMember.List).refID]}"
+                },
                 "-1")
-        result.appendLine("(define-fun ${name.firstCharLower()} ((listId Int)) Int $iteStructure)")
+        result.appendLine("(define-fun ${name.firstCharLower()} ((id Int)) Int $iteStructure)")
         // Generate list membership function
         val iteStructure2 =
             generateEqualsITEStructure(
@@ -107,7 +109,11 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
                       (thenEntry.component2() as SmtIntermediateMember.List.ReferenceList).list
                   if (list.isNotEmpty()) {
                     generateEqualsITEStructure(
-                        list, "elemId", { ifEntry -> "$ifEntry" }, { _ -> "true" }, "false")
+                        list,
+                        "elemId",
+                        { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry]}" },
+                        { _ -> "true" },
+                        "false")
                   } else {
                     // TODO: Maybe cut out these entry, because default value is always false
                     "false"
@@ -135,5 +141,45 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
     }
   }
   result.appendLine()
+
+  result.appendLine("; Information about the ticks")
+  // Generate firstTick
+  val firstTick = wrapper.smtIDToExternalID[wrapper.listOfChronologicalTicks[0].getSmtID()]!!
+  result.appendLine("(define-fun firstTick () Int ${firstTick})")
+  // Generate nextTick
+  val indexToTick = wrapper.listOfChronologicalTicks.mapIndexed { index, tick -> index to tick }
+  val tickIndexToNext = { tickIndex: Int ->
+    if (tickIndex == wrapper.listOfChronologicalTicks.size - 1) {
+      -1
+    } else {
+      wrapper.smtIDToExternalID[wrapper.listOfChronologicalTicks[tickIndex + 1].getSmtID()]!!
+    }
+  }
+  val iteStructure4 =
+      generateEqualsITEStructure(
+          indexToTick,
+          "tickId",
+          { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component2().getSmtID()]!!}" },
+          { thenEntry -> "${tickIndexToNext(thenEntry.component1())}" },
+          "-2")
+  result.appendLine("(define-fun nextTick ((tickId Int)) Int $iteStructure4)")
+  // Generate prevTick
+  val tickIndexToPrevious = { tickIndex: Int ->
+    if (tickIndex == 0) {
+      -1
+    } else {
+      wrapper.smtIDToExternalID[wrapper.listOfChronologicalTicks[tickIndex - 1].getSmtID()]!!
+    }
+  }
+  val iteStructure5 =
+      generateEqualsITEStructure(
+          indexToTick,
+          "tickId",
+          { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component2().getSmtID()]!!}" },
+          { thenEntry -> "${tickIndexToPrevious(thenEntry.component1())}" },
+          "-2")
+  result.appendLine("(define-fun prevTick ((tickId Int)) Int $iteStructure5)")
+  result.appendLine()
+
   return result.toString()
 }

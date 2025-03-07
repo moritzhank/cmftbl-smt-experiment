@@ -17,16 +17,16 @@
 
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import tools.aqua.stars.data.av.dataclasses.Segment
-import tools.aqua.stars.importer.carla.CarlaSimulationRunsWrapper
-import tools.aqua.stars.importer.carla.loadSegments
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import tools.aqua.stars.data.av.dataclasses.Segment
+import tools.aqua.stars.importer.carla.CarlaSimulationRunsWrapper
+import tools.aqua.stars.importer.carla.loadSegments
 
 object ExperimentLoader {
 
@@ -40,15 +40,19 @@ object ExperimentLoader {
 
   fun loadTestSegments(town: String = "01", seed: String = "2"): List<Segment> {
     init()
-    val dynamic = Path("$pathToCarlaData/_Game_Carla_Maps_Town$town/dynamic_data__Game_Carla_Maps_Town${town}_seed$seed.json")
-    val static = Path("$pathToCarlaData/_Game_Carla_Maps_Town$town/static_data__Game_Carla_Maps_Town${town}.json")
+    val dynamic =
+        Path(
+            "$pathToCarlaData/_Game_Carla_Maps_Town$town/dynamic_data__Game_Carla_Maps_Town${town}_seed$seed.json")
+    val static =
+        Path(
+            "$pathToCarlaData/_Game_Carla_Maps_Town$town/static_data__Game_Carla_Maps_Town${town}.json")
     val wrapper = CarlaSimulationRunsWrapper(static, listOf(dynamic))
     return loadSegments(listOf(wrapper), false, 10, true).toList()
   }
 
   fun getSeeds(town: String): Array<Int> {
     init()
-    return when(town) {
+    return when (town) {
       "01" -> carlaSeeds.town01
       "02" -> carlaSeeds.town02
       "10HD" -> carlaSeeds.town10HD
@@ -57,7 +61,7 @@ object ExperimentLoader {
   }
 
   private fun init() {
-    if(!setup) {
+    if (!setup) {
       val pathToCarlaSeedsJson = getPathToResource("/data/carla_seeds.json").toString()
       val fileContent = File(pathToCarlaSeedsJson).readText()
       carlaSeeds = Json.decodeFromString(fileContent)
@@ -86,8 +90,6 @@ private fun requirePathToCarlaData(): String {
     "The file dataSettings.json must be specified."
   }
   val dataPath = settings.pathToCarlaData
-  require(File(dataPath).exists()) {
-    "The specified dictionary (at \"$dataPath\") does not exist."
-  }
+  require(File(dataPath).exists()) { "The specified dictionary (at \"$dataPath\") does not exist." }
   return dataPath
 }
