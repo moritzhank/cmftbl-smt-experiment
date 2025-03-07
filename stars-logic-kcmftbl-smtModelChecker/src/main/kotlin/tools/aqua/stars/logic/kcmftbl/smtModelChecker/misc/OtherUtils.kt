@@ -23,11 +23,23 @@ package tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc
 fun String.firstCharLower(): String = this.replaceFirstChar { it.lowercaseChar() }
 
 /** Converts given primitive to SmtLib format. */
-fun Any.toSmtLibPrimitiveFormat(): String {
+fun Any.toSmtLibPrimitiveFormat(smtLibTermForNegativeNumbers: (Number) -> String): String {
   return when (this) {
     is String -> "\"$this\""
-    is Double -> this.toBigDecimal().toPlainString()
+    is Number ->
+        if (!this.isNegative()) this._toSmtLibPrimitiveFormat()
+        else smtLibTermForNegativeNumbers(this)
+    else -> this.toString()
+  }
+}
+
+/** Converts number to SmtLib format. */
+fun Number._toSmtLibPrimitiveFormat(): String {
+  return when (this) {
+    is Int -> this.toString()
+    is Long -> this.toString()
     is Float -> this.toBigDecimal().toPlainString()
+    is Double -> this.toBigDecimal().toPlainString()
     else -> this.toString()
   }
 }
@@ -57,4 +69,27 @@ fun <T> generateEqualsITEStructure(
     iteStructureFront.append("$defaultValue${")".repeat(bracketsNeeded)}")
   }
   return iteStructureFront.toString()
+}
+
+/** Negate a number. */
+fun Number.negate(): Number {
+  require(this != Int.MIN_VALUE) { "Int.MIN_VALUE cannot be negated." }
+  return when (this) {
+    is Int -> -this
+    is Long -> -this
+    is Float -> -this
+    is Double -> -this
+    else -> throw IllegalArgumentException("Unsupported number type: ${this::class.simpleName}")
+  }
+}
+
+/** Is number smaller than zero? */
+fun Number.isNegative(): Boolean {
+  return when (this) {
+    is Int -> this < 0
+    is Long -> this < 0
+    is Float -> this < 0
+    is Double -> this < 0
+    else -> throw IllegalArgumentException("Unsupported number type: ${this::class.simpleName}")
+  }
 }

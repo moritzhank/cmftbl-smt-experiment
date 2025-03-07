@@ -26,7 +26,8 @@ import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.getAbsolutePathFromPr
 /** Captures all supported SMT-Solver. */
 enum class SmtSolver(val solverName: String) {
   CVC5("cvc5"),
-  Z3("z3")
+  Z3("z3"),
+  YICES("yices")
 }
 
 /** Save the SMT-program [program] in a file. */
@@ -70,6 +71,7 @@ fun smtSolverVersion(solver: SmtSolver): String {
       when (solver) {
         SmtSolver.CVC5 -> "--version"
         SmtSolver.Z3 -> "--version"
+        SmtSolver.YICES -> "--version"
       }
   val proc = ProcessBuilder(solverBinPath, versionOption).start().apply { waitFor() }
   val result = proc.inputReader().readText() + proc.errorReader().readText()
@@ -78,6 +80,7 @@ fun smtSolverVersion(solver: SmtSolver): String {
       result.lines().first().removePrefix("This is ").dropLastWhile { it != '[' }.dropLast(2)
     }
     SmtSolver.Z3 -> result.dropLastWhile { it != '-' }.dropLast(2)
+    SmtSolver.YICES -> result.lines().first()
   }
 }
 

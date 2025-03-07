@@ -23,8 +23,8 @@ package tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation
 enum class SmtPrimitive(val smtPrimitiveSortName: String, val defaultValue: Any) {
 
   BOOL("Bool", false),
-  INT("Int", Int.MIN_VALUE),
-  REAL("Real", Double.MIN_VALUE),
+  INT("Int", Int.MIN_VALUE + 1),
+  REAL("Real", Double.MIN_VALUE + 1.0),
   STRING("String", "")
 }
 

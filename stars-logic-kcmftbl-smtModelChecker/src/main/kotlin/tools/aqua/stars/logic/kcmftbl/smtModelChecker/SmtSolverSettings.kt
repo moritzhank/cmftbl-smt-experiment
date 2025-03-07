@@ -27,7 +27,11 @@ import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.getAbsolutePathFromPr
 
 /** Contains all relevant settings for local SMT-solver instances. */
 @Serializable
-data class SmtSolverSettings(var pathToCVC5Bin: String, var pathToz3Bin: String) {
+data class SmtSolverSettings(
+    var pathToCVC5Bin: String,
+    var pathToz3Bin: String,
+    var pathToYicesBin: String
+) {
 
   companion object {
 
@@ -44,7 +48,7 @@ data class SmtSolverSettings(var pathToCVC5Bin: String, var pathToz3Bin: String)
 
     /** Generate empty "smtSolverSettings.json". */
     fun generateTemplate() {
-      File(settingsFilePath).writeText(Json.encodeToString(SmtSolverSettings("", "")))
+      File(settingsFilePath).writeText(Json.encodeToString(SmtSolverSettings("", "", "")))
     }
   }
 
@@ -53,6 +57,7 @@ data class SmtSolverSettings(var pathToCVC5Bin: String, var pathToz3Bin: String)
     return when (smtSolver) {
       SmtSolver.CVC5 -> pathToCVC5Bin
       SmtSolver.Z3 -> pathToz3Bin
+      SmtSolver.YICES -> pathToYicesBin
     }
   }
 }

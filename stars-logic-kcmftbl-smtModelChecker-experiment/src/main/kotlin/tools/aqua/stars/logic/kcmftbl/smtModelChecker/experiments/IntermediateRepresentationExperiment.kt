@@ -31,7 +31,7 @@ import tools.aqua.stars.logic.kcmftbl.smtModelChecker.saveSmtFile
 
 fun main() {
   // Options
-  val solver = SmtSolver.CVC5
+  val solver = SmtSolver.YICES
   val removeSmt2File = false
 
   val t: Segment = ExperimentLoader.loadTestSegment()
@@ -49,14 +49,8 @@ fun main() {
         SmtDataTranslationWrapper(intermediateRepresentation, t.tickData.toTypedArray())
   }
   println("Duration of generation of SmtDataTranslationWrapper: $translationWrapperTime")
-
-  val x =
-      translationWrapper.smtIDToExternalID[
-              t.tickData.first().vehicles.find { it.id == 391 }!!.lane.getSmtID()]
-  println(x)
-
   var smtLib: String
-  val smtLibTime = measureTime { smtLib = generateSmtLib(translationWrapper) }
+  val smtLibTime = measureTime { smtLib = generateSmtLib(translationWrapper, solver) }
   smtLib += "(check-sat)"
   smtLib = ";Town_01, seed 2, segment 1" + System.lineSeparator() + smtLib
   println("Duration of generation of SMT-LIB: $smtLibTime")

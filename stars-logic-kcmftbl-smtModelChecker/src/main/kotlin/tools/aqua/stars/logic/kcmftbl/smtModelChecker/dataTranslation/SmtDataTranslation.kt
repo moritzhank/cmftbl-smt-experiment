@@ -20,13 +20,23 @@
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation
 
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.SmtSolver
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc._toSmtLibPrimitiveFormat
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.firstCharLower
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.generateEqualsITEStructure
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.negate
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.toSmtLibPrimitiveFormat
 
 /** Generate SmtLib. */
 fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSolver.CVC5): String {
   val result = StringBuilder()
+  val termForNegativeNumber =
+      if (solver == SmtSolver.YICES) {
+        { x: Number -> "(- 0 ${x.negate()._toSmtLibPrimitiveFormat()})" }
+      } else {
+        { x: Number -> x._toSmtLibPrimitiveFormat() }
+      }
+  val termForMinusOne = termForNegativeNumber(-1)
+  val termForMinusTwo = termForNegativeNumber(-2)
 
   // Prelude
   result.appendLine("(set-logic ALL)")
@@ -62,12 +72,16 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
                 { thenEntry ->
                   "${wrapper.smtIDToExternalID[(thenEntry.component2() as SmtIntermediateMember.Reference).refID]!!}"
                 },
-                "-1")
+                termForMinusOne)
         result.appendLine("(define-fun ${name.firstCharLower()} ((id Int)) Int $iteStructure)")
       }
       // Generate member definition for values
       SmtIntermediateMemberType.VALUE -> {
         val smtPrimitive = memberInfo.memberClass.smtPrimitive()!!
+        if (solver == SmtSolver.YICES && smtPrimitive == SmtPrimitive.STRING) {
+          // Yices does not support strings
+          continue
+        }
         val iteStructure =
             generateEqualsITEStructure(
                 smtIntermediateMember.entries,
@@ -76,15 +90,19 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
                 { thenPair ->
                   (thenPair.component2() as SmtIntermediateMember.Value)
                       .value
-                      .toSmtLibPrimitiveFormat()
+                      .toSmtLibPrimitiveFormat(termForNegativeNumber)
                 },
-                smtPrimitive.defaultValue.toSmtLibPrimitiveFormat())
+                smtPrimitive.defaultValue.toSmtLibPrimitiveFormat(termForNegativeNumber))
         val returnSort = smtPrimitive.smtPrimitiveSortName
         result.appendLine(
             "(define-fun ${name.firstCharLower()} ((id Int)) $returnSort $iteStructure)")
       }
       // Generate member definition for lists
       SmtIntermediateMemberType.REFERENCE_LIST -> {
+        if (solver == SmtSolver.YICES && memberInfo.listArgumentClass == String::class.java) {
+          // Yices does not support strings
+          continue
+        }
         // Generate member to list mapping
         val iteStructure =
             generateEqualsITEStructure(
@@ -94,7 +112,7 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
                 { thenEntry ->
                   "${wrapper.smtIDToExternalID[(thenEntry.component2() as SmtIntermediateMember.List).refID]}"
                 },
-                "-1")
+                termForMinusOne)
         result.appendLine("(define-fun ${name.firstCharLower()} ((id Int)) Int $iteStructure)")
         // Generate list membership function
         val iteStructure2 =
@@ -131,7 +149,7 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
                 { thenEntry ->
                   "${(thenEntry.component2() as SmtIntermediateMember.List.ReferenceList).list.size}"
                 },
-                "-1")
+                termForMinusOne)
         result.appendLine(
             "(define-fun size_${name.firstCharLower()} ((listId Int)) Int $iteStructure3)")
       }
@@ -160,8 +178,8 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
           indexToTick,
           "tickId",
           { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component2().getSmtID()]!!}" },
-          { thenEntry -> "${tickIndexToNext(thenEntry.component1())}" },
-          "-2")
+          { thenEntry -> tickIndexToNext(thenEntry.component1()).toSmtLibPrimitiveFormat(termForNegativeNumber) },
+          termForMinusTwo)
   result.appendLine("(define-fun nextTick ((tickId Int)) Int $iteStructure4)")
   // Generate prevTick
   val tickIndexToPrevious = { tickIndex: Int ->
@@ -176,8 +194,8 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
           indexToTick,
           "tickId",
           { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component2().getSmtID()]!!}" },
-          { thenEntry -> "${tickIndexToPrevious(thenEntry.component1())}" },
-          "-2")
+          { thenEntry -> tickIndexToPrevious(thenEntry.component1()).toSmtLibPrimitiveFormat(termForNegativeNumber) },
+          termForMinusTwo)
   result.appendLine("(define-fun prevTick ((tickId Int)) Int $iteStructure5)")
   result.appendLine()
 
