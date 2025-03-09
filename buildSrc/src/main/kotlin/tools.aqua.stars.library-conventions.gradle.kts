@@ -29,7 +29,7 @@ import tools.aqua.license
 plugins {
   id("com.dorongold.task-tree")
   id("com.github.ben-manes.versions")
-  id("com.diffplug.spotless")
+  //id("com.diffplug.spotless")
   id("io.gitlab.arturbosch.detekt")
   id("org.jetbrains.dokka")
 
@@ -51,10 +51,10 @@ tasks.dependencyUpdates {
   rejectVersionIf(destabilizesVersion)
 }
 
-spotless {
-  kotlinGradle { defaultFormat(rootProject) }
-  kotlin { defaultFormat(rootProject) }
-}
+//spotless {
+//  kotlinGradle { defaultFormat(rootProject) }
+//  kotlin { defaultFormat(rootProject) }
+//}
 
 detekt {
   basePath = rootProject.projectDir.absolutePath

@@ -33,7 +33,7 @@ dependencies {
   implementation(libs.gradle.detekt)
   implementation(libs.gradle.gitVersioning)
   implementation(libs.gradle.nexusPublish)
-  implementation(libs.gradle.spotless)
+  //implementation(libs.gradle.spotless)
   implementation(libs.gradle.taskTree)
   // implementation(libs.gradle.kover)
 

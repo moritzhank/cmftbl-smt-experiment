@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-import com.diffplug.gradle.spotless.KotlinExtension
-import com.diffplug.gradle.spotless.KotlinGradleExtension
+//import com.diffplug.gradle.spotless.KotlinExtension
+//import com.diffplug.gradle.spotless.KotlinGradleExtension
 import tools.aqua.GlobalMavenMetadataExtension
-import tools.aqua.defaultFormat
+//import tools.aqua.defaultFormat
 import tools.aqua.destabilizesVersion
 
 plugins {
   id("com.dorongold.task-tree")
   id("com.github.ben-manes.versions")
-  id("com.diffplug.spotless")
+  //id("com.diffplug.spotless")
   id("io.github.gradle-nexus.publish-plugin")
   id("me.qoomon.git-versioning")
 }
@@ -40,18 +40,19 @@ tasks.dependencyUpdates {
   rejectVersionIf(destabilizesVersion)
 }
 
-spotless {
-  kotlinGradle { defaultFormat(rootProject) }
 
-  format("kotlinBuildSrc", KotlinExtension::class.java) {
-    target("buildSrc/src/*/kotlin/**/*.kt")
-    defaultFormat(rootProject)
-  }
-  format("kotlinGradleBuildSrc", KotlinGradleExtension::class.java) {
-    target("buildSrc/*.gradle.kts", "buildSrc/src/*/kotlin/**/*.gradle.kts")
-    defaultFormat(rootProject)
-  }
-}
+//spotless {
+//  kotlinGradle { defaultFormat(rootProject) }
+//
+//  format("kotlinBuildSrc", KotlinExtension::class.java) {
+//    target("buildSrc/src/*/kotlin/**/*.kt")
+//    defaultFormat(rootProject)
+//  }
+//  format("kotlinGradleBuildSrc", KotlinGradleExtension::class.java) {
+//    target("buildSrc/*.gradle.kts", "buildSrc/src/*/kotlin/**/*.gradle.kts")
+//    defaultFormat(rootProject)
+//  }
+//}
 
 val mavenMetadata = extensions.create<GlobalMavenMetadataExtension>("mavenMetadata")
 
