@@ -29,9 +29,14 @@ fun formulaToLatex(fBuilder: FormulaBuilder): String {
   return phi.str()
 }
 
+/** Translate a given formula into Latex. */
+fun formulaToLatex(f: Formula): String {
+  return f.str()
+}
+
 /** Generate an SVG of the input formula. */
 fun renderLatexFormula(latex: String, deletePrevSvgs: Boolean = true) {
-  val formulaImgs = getAbsolutePathFromProjectDir("formulaSvgs")
+  val formulaImgs = getAbsolutePathFromProjectDir("_formulaSvgs")
   File(formulaImgs)
       .apply {
         if (deletePrevSvgs) {
@@ -80,14 +85,6 @@ private fun Formula.str(): String {
   }
 }
 
-private fun Term<*>.str(): String {
-  val t = this
-  return when (t) {
-    is Constant -> t.value.toString()
-    is Variable -> t.callContext.str()
-  }
-}
-
 private fun CallContext<*, *>.str(tmp: String? = null): String {
   val cc = this
   val _tmp = if (tmp == null) "" else ".$tmp"
@@ -100,5 +97,3 @@ private fun CallContext<*, *>.str(tmp: String? = null): String {
     is PropertyCallContext -> cc.before!!.str("${cc.prop.name}$_tmp")
   }
 }
-
-private fun Pair<Int, Int>?.str(): String = if (this == null) "[0,∞)" else "[$first,$second]"

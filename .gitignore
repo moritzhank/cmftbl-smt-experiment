@@ -7,5 +7,6 @@
 smtSolverSettings.json
 dataSettings.json
 /smtTmp
-/formulaSvgs
+/_formulaSvgs
+/_treeSvgs
 /experiment

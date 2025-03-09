@@ -23,7 +23,7 @@
 
 package tools.aqua.stars.logic.kcmftbl.dsl
 
-sealed interface Term<Type>
+sealed interface Term<Type> : Evaluable
 
 data class Constant<Type>(val value: Type) : Term<Type>
 

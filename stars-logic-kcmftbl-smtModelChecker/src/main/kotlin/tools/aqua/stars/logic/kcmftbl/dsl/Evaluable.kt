@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package tools.aqua.stars.logic.kcmftbl.smtModelChecker
+package tools.aqua.stars.logic.kcmftbl.dsl
 
-import tools.aqua.stars.logic.kcmftbl.dsl.Variable
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.SmtIntermediateRepresentation
+sealed interface Evaluable
 
-fun <T> translateVariable(
-    variable: Variable<T>,
-    intermediateRep: List<SmtIntermediateRepresentation>
-) {
-  println(variable.toString())
+sealed interface EvaluablePredicate : Formula
+
+sealed interface EvaluableRelation<T> : EvaluablePredicate {
+  val lhs: Term<T>
+  val rhs: Term<T>
+  val type: Relation
 }

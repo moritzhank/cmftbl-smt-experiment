@@ -25,7 +25,7 @@ package tools.aqua.stars.logic.kcmftbl.dsl
 
 import tools.aqua.stars.core.types.EntityType
 
-sealed interface Formula
+sealed interface Formula : Evaluable
 
 data object TT : Formula
 
@@ -71,7 +71,8 @@ data class Binding<Type>(
     val inner: Formula
 ) : Formula {
 
-  fun copy(): Binding<Type> = Binding(ccb, copyTerm(bindTerm), inner)
+  fun copy(callbackForInner: (Formula) -> Formula = { f -> f }): Binding<Type> =
+      Binding(ccb, copyTerm(bindTerm), callbackForInner(inner))
 }
 
 data class MinPrevalence(

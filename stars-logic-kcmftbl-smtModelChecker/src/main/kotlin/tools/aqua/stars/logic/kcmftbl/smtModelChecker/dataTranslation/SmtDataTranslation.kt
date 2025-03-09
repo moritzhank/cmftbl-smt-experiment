@@ -178,7 +178,9 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
           indexToTick,
           "tickId",
           { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component2().getSmtID()]!!}" },
-          { thenEntry -> tickIndexToNext(thenEntry.component1()).toSmtLibPrimitiveFormat(termForNegativeNumber) },
+          { thenEntry ->
+            tickIndexToNext(thenEntry.component1()).toSmtLibPrimitiveFormat(termForNegativeNumber)
+          },
           termForMinusTwo)
   result.appendLine("(define-fun nextTick ((tickId Int)) Int $iteStructure4)")
   // Generate prevTick
@@ -194,7 +196,10 @@ fun generateSmtLib(wrapper: SmtDataTranslationWrapper, solver: SmtSolver = SmtSo
           indexToTick,
           "tickId",
           { ifEntry -> "${wrapper.smtIDToExternalID[ifEntry.component2().getSmtID()]!!}" },
-          { thenEntry -> tickIndexToPrevious(thenEntry.component1()).toSmtLibPrimitiveFormat(termForNegativeNumber) },
+          { thenEntry ->
+            tickIndexToPrevious(thenEntry.component1())
+                .toSmtLibPrimitiveFormat(termForNegativeNumber)
+          },
           termForMinusTwo)
   result.appendLine("(define-fun prevTick ((tickId Int)) Int $iteStructure5)")
   result.appendLine()

@@ -57,7 +57,7 @@ private fun Formula.str(): String {
   }
 }
 
-private fun Term<*>.str(): String {
+fun Term<*>.str(): String {
   val t = this
   return when (t) {
     is Constant -> t.value.toString()
@@ -77,4 +77,4 @@ private fun CallContext<*, *>.str(tmp: String = ""): String {
   }
 }
 
-private fun Pair<Int, Int>?.str(): String = if (this == null) "[0,∞)" else "[$first,$second]"
+fun Pair<Int, Int>?.str(): String = if (this == null) "[0,∞)" else "[$first,$second]"
