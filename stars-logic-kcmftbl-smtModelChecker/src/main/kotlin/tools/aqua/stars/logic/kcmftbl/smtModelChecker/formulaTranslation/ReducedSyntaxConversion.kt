@@ -15,20 +15,21 @@
  * limitations under the License.
  */
 
-package tools.aqua.stars.logic.kcmftbl.smtModelChecker
+package tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation
 
-/*
+import tools.aqua.stars.logic.kcmftbl.dsl.*
+
 fun toReducedSyntax(f: Formula, propagateNeg: Boolean = false): Formula {
   return when (f) {
     // Recursion anchor
     is FF,
-    is TT -> if (propagateNeg) negAtomicAndCopy(f) else copyF(f)
+    is TT -> if (propagateNeg) negAtomicAndCopy(f) else copyFormula(f)
     is Leq<*>,
     is Geq<*>,
     is Lt<*>,
     is Gt<*>,
     is Eq<*>,
-    is Ne<*> -> if (propagateNeg) negRelationAndCopy(f) else copyF(f)
+    is Ne<*> -> if (propagateNeg) negRelationAndCopy(f) else copyFormula(f)
     // Reduced syntax
     is Neg -> toReducedSyntax(f.inner, !propagateNeg)
     is And ->
@@ -37,12 +38,7 @@ fun toReducedSyntax(f: Formula, propagateNeg: Boolean = false): Formula {
     is Or ->
         if (propagateNeg) And(toReducedSyntax(f.lhs, true), toReducedSyntax(f.rhs, true))
         else Or(toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
-    is Exists ->
-        if (propagateNeg) Forall(toReducedSyntax(f.inner, true))
-        else Exists(toReducedSyntax(f.inner))
-    is Forall ->
-        if (propagateNeg) Exists(toReducedSyntax(f.inner, true))
-        else Forall(toReducedSyntax(f.inner))
+    is Binding<*> -> f.copy { inner -> toReducedSyntax(inner) }
     is Prev -> Prev(f.interval?.copy(), toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
     is Next -> Next(f.interval?.copy(), toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
     is Since ->
@@ -51,6 +47,18 @@ fun toReducedSyntax(f: Formula, propagateNeg: Boolean = false): Formula {
     is Until ->
         Until(f.interval?.copy(), toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
             .wrapInNot(propagateNeg)
+    // Reducable syntax
+    is Eventually -> Until(f.interval?.copy(), TT, toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
+    else ->
+        throw IllegalArgumentException(
+            "Formula type ${f::class.simpleName} is not supported currently.")
+  /*
+    is Exists<*> ->
+        if (propagateNeg) Forall(toReducedSyntax(f.inner, true))
+        else Exists(toReducedSyntax(f.inner))
+    is Forall<*> ->
+        if (propagateNeg) Exists(toReducedSyntax(f.inner, true))
+        else Forall(toReducedSyntax(f.inner))
     is MinPrevalence -> MinPrevalence(f.fraction, toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
     is PastMinPrevalence ->
         PastMinPrevalence(f.fraction, toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
@@ -72,24 +80,22 @@ fun toReducedSyntax(f: Formula, propagateNeg: Boolean = false): Formula {
     is Historically ->
         Since(f.interval?.copy(), TT, toReducedSyntax(f.inner, true)).wrapInNot(!propagateNeg)
     is Eventually -> Until(f.interval?.copy(), TT, toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
-    is Globally ->
-        Until(f.interval?.copy(), TT, toReducedSyntax(f.inner, true)).wrapInNot(!propagateNeg)
     is MaxPrevalence ->
         MinPrevalence(1 - f.fraction, toReducedSyntax(f.inner, true)).wrapInNot(propagateNeg)
     is PastMaxPrevalence ->
         PastMinPrevalence(1 - f.fraction, toReducedSyntax(f.inner, true)).wrapInNot(propagateNeg)
+  */
   }
 }
 
-private fun negRelationAndCopy(f: Formula): Formula {
+private fun <T> negRelationAndCopy(f: EvaluableRelation<T>): EvaluableRelation<T> {
   return when (f) {
-    is Leq<*> -> Gt(copyT(f.lhs), copyT(f.rhs))
-    is Geq<*> -> Lt(copyT(f.lhs), copyT(f.rhs))
-    is Lt<*> -> Geq(copyT(f.lhs), copyT(f.rhs))
-    is Gt<*> -> Leq(copyT(f.lhs), copyT(f.rhs))
-    is Eq<*> -> Ne(copyT(f.lhs), copyT(f.rhs))
-    is Ne<*> -> Eq(copyT(f.lhs), copyT(f.rhs))
-    else -> f
+    is Leq<*> -> Gt(copyTerm(f.lhs), copyTerm(f.rhs))
+    is Geq<*> -> Lt(copyTerm(f.lhs), copyTerm(f.rhs))
+    is Lt<*> -> Geq(copyTerm(f.lhs), copyTerm(f.rhs))
+    is Gt<*> -> Leq(copyTerm(f.lhs), copyTerm(f.rhs))
+    is Eq<*> -> Ne(copyTerm(f.lhs), copyTerm(f.rhs))
+    is Ne<*> -> Eq(copyTerm(f.lhs), copyTerm(f.rhs))
   }
 }
 
@@ -102,4 +108,3 @@ private fun negAtomicAndCopy(f: Formula): Formula {
 }
 
 private fun Formula.wrapInNot(wrapInNot: Boolean) = if (wrapInNot) Neg(this) else this
-*/

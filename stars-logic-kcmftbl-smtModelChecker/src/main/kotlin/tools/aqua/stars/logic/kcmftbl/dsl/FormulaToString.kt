@@ -67,13 +67,14 @@ fun Term<*>.str(): String {
 
 private fun CallContext<*, *>.str(tmp: String = ""): String {
   val cc = this
+  val tmp = if (tmp.isEmpty()) "" else ".$tmp"
   return when (cc) {
-    is CallContextBase -> "$cc.$tmp"
-    is Callable1CallContext -> cc.before!!.str("${cc.func.name}().$tmp")
-    is Callable2CallContext<*, *, *> -> cc.before!!.str("${cc.func.name}(${cc.param.str()}).$tmp")
+    is CallContextBase -> "$cc$tmp"
+    is Callable1CallContext -> cc.before!!.str("${cc.func.name}()$tmp")
+    is Callable2CallContext<*, *, *> -> cc.before!!.str("${cc.func.name}(${cc.param.str()})$tmp")
     is Callable3CallContext<*, *, *, *> ->
-        cc.before!!.str("${cc.func.name}(${cc.param1.str()},${cc.param2.str()}).$tmp")
-    is PropertyCallContext -> cc.before!!.str("${cc.prop.name}.$tmp")
+        cc.before!!.str("${cc.func.name}(${cc.param1.str()},${cc.param2.str()})$tmp")
+    is PropertyCallContext -> cc.before!!.str("${cc.prop.name}$tmp")
   }
 }
 

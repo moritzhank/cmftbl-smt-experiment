@@ -23,7 +23,8 @@ import java.net.URLEncoder
 import java.util.UUID
 
 interface TreeVisualizationNode {
-  val treeVisNodeContent: String
+  fun getTVNContent(): String
+
   val children: List<TreeVisualizationNode>
 }
 
@@ -38,7 +39,7 @@ fun TreeVisualizationNode.generateGraphVizCode(): String {
   var nextId = 1
   while (queue.isNotEmpty()) {
     val node = queue.removeFirst()
-    result.append("n${node.first} [label=\"${node.second.treeVisNodeContent}\"];")
+    result.append("n${node.first} [label=\"${node.second.getTVNContent()}\"];")
     node.second.children.forEach {
       val childID = nextId++
       queue.add(Pair(childID, it))

@@ -35,7 +35,6 @@ import tools.aqua.stars.logic.kcmftbl.dsl.times
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.ExperimentLoader
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.SmtDataTranslationWrapper
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.getSmtIntermediateRepresentation
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.translateVariable
 
 val vehiclesInBlock = function { t: CCB<TickData>, b: CCB<Block> ->
   filter(t * TickData::vehicles) { v: CCB<Vehicle> ->
@@ -75,5 +74,4 @@ fun main() {
 
   val x =
       (((ast.getPhi().first() as MinPrevalence).inner as And).lhs as Leq<*>).rhs as Variable<Int>
-  translateVariable(x, intermediateRepresentation)
 }
