@@ -1,19 +1,15 @@
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 
+import tools.aqua.stars.data.av.dataclasses.Lane
 import tools.aqua.stars.data.av.dataclasses.Vector3D
 import tools.aqua.stars.data.av.dataclasses.Vehicle
-import tools.aqua.stars.logic.kcmftbl.dsl.Binding
 import tools.aqua.stars.logic.kcmftbl.dsl.CCB
 import tools.aqua.stars.logic.kcmftbl.dsl.FormulaBuilder.Companion.formula
-import tools.aqua.stars.logic.kcmftbl.dsl.TT
 import tools.aqua.stars.logic.kcmftbl.dsl.formulaToLatex
 import tools.aqua.stars.logic.kcmftbl.dsl.renderLatexFormula
 import tools.aqua.stars.logic.kcmftbl.dsl.times
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation.EvaluationInstance
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation.EvaluationNode
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation.EvaluationType
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation.convert
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation.instantiateUniversalQuantification
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation.generateEvaluation
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.emptyVehicle
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.generateGraphVizCode
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.renderTree
 
@@ -28,7 +24,7 @@ val untilPred = formula { v: CCB<Vehicle> ->
   binding(term(v * Vehicle::lane)) { l ->
     until(Pair(1, 3)) {
       term(v * Vehicle::id) ne const(10)
-      term(v * Vehicle::lane) ne term(l)
+      term(v * Vehicle::lane * Lane::laneId) ne term(l * Lane::laneId)
     }
   }.apply { ccb.debugInfo = "l" }
 }
@@ -42,17 +38,8 @@ val nestedUntilPred = formula { v: CCB<Vehicle> ->
 }
 
 fun main() {
-  val evalInstance = EvaluationInstance()
-  val untilPred_ = untilPred(CCB<Vehicle>().apply { debugInfo = "v" })
-  val bindingF = untilPred_.getPhi().first() as Binding<*>
-  evalInstance.addBoundVariable(bindingF.ccb)
-  val evalNode = bindingF.inner.convert(evalInstance, EvaluationType.EVALUATE, null, 0)
-
-  val x = instantiateUniversalQuantification(evalInstance, evalNode.children.first(), 0, arrayOf(0.0, 1.0, 2.0, 3.0, 4.0, 5.0))
-
-  val tmp = EvaluationNode(TT, EvaluationType.UNIV_INST, x.toMutableList())
-  evalNode.children.apply { removeFirst() }.add(0, tmp)
+  val evalNode = untilPred.generateEvaluation(emptyVehicle(id = 1), "v")
 
   renderTree(evalNode.generateGraphVizCode())
-  renderLatexFormula(formulaToLatex(untilPred_))
+  renderLatexFormula(formulaToLatex(untilPred(CCB<Vehicle>().apply { debugInfo = "v" })))
 }

@@ -1,7 +1,7 @@
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation
 
 import tools.aqua.stars.logic.kcmftbl.dsl.Formula
-
+/*
 fun instantiateUniversalQuantification(evalInstance: EvaluationInstance, evalNode: EvaluationNode, currentTick: Int,
                                        ticks: Array<Double>): List<EvaluationNode> {
   require(evalNode.evaluationType == EvaluationType.UNIV_INST)
@@ -47,3 +47,4 @@ private fun testsForGetTicksInInterval() {
   result = getTicksInInterval(1, ticks, Pair(4, 6))
   require("[]" == result.toString())
 }
+ */

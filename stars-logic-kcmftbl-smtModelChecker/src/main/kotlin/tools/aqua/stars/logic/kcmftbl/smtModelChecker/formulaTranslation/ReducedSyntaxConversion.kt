@@ -32,27 +32,23 @@ fun toReducedSyntax(f: Formula, propagateNeg: Boolean = false): Formula {
     is Ne<*> -> if (propagateNeg) negRelationAndCopy(f) else copyFormula(f)
     // Reduced syntax
     is Neg -> toReducedSyntax(f.inner, !propagateNeg)
-    is And ->
-        if (propagateNeg) Or(toReducedSyntax(f.lhs, true), toReducedSyntax(f.rhs, true))
-        else And(toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
-    is Or ->
-        if (propagateNeg) And(toReducedSyntax(f.lhs, true), toReducedSyntax(f.rhs, true))
-        else Or(toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
+    is And -> {
+      if (propagateNeg) Or(toReducedSyntax(f.lhs, true), toReducedSyntax(f.rhs, true))
+      else And(toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
+    }
+    is Or -> {
+      if (propagateNeg) And(toReducedSyntax(f.lhs, true), toReducedSyntax(f.rhs, true))
+      else Or(toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
+    }
     is Binding<*> -> f.copy { inner -> toReducedSyntax(inner) }
     is Prev -> Prev(f.interval?.copy(), toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
     is Next -> Next(f.interval?.copy(), toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
-    is Since ->
-        Since(f.interval?.copy(), toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
-            .wrapInNot(propagateNeg)
-    is Until ->
-        Until(f.interval?.copy(), toReducedSyntax(f.lhs), toReducedSyntax(f.rhs))
-            .wrapInNot(propagateNeg)
+    is Since -> Since(f.interval?.copy(), toReducedSyntax(f.lhs), toReducedSyntax(f.rhs)).wrapInNot(propagateNeg)
+    is Until -> Until(f.interval?.copy(), toReducedSyntax(f.lhs), toReducedSyntax(f.rhs)).wrapInNot(propagateNeg)
     // Reducable syntax
     is Eventually -> Until(f.interval?.copy(), TT, toReducedSyntax(f.inner)).wrapInNot(propagateNeg)
-    else ->
-        throw IllegalArgumentException(
-            "Formula type ${f::class.simpleName} is not supported currently.")
-  /*
+    else -> error("Formula type ${f::class.simpleName} is not supported currently.")
+    /*
     is Exists<*> ->
         if (propagateNeg) Forall(toReducedSyntax(f.inner, true))
         else Exists(toReducedSyntax(f.inner))
@@ -84,7 +80,7 @@ fun toReducedSyntax(f: Formula, propagateNeg: Boolean = false): Formula {
         MinPrevalence(1 - f.fraction, toReducedSyntax(f.inner, true)).wrapInNot(propagateNeg)
     is PastMaxPrevalence ->
         PastMinPrevalence(1 - f.fraction, toReducedSyntax(f.inner, true)).wrapInNot(propagateNeg)
-  */
+    */
   }
 }
 
