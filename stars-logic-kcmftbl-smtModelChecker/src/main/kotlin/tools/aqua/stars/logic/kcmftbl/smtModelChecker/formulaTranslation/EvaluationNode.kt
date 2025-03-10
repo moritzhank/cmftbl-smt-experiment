@@ -76,23 +76,6 @@ data class WitnessEvalNode(
 
 }
 
-/** Note: Can contain TT, FF, a constant term or a variable that is constant in this context. */
-data class ConstEvalNode(
-  /** Reference to the term or formula. */
-  val evaluable: Evaluable,
-  override val debugInfo: String = "",
-): EvaluationNode {
-
-  override val children: MutableList<EvaluationNode> = mutableListOf()
-  override val emittedID: String? = null
-  override val emissionType: EmissionType = EmissionType.NONE
-
-  override fun getTVNContent(): String {
-    return evaluable::class.simpleName + (if (debugInfo.isNotEmpty()) " ($debugInfo)" else "") + "\\nCONST\\n"
-  }
-
-}
-
 data class OrgaEvalNode(
   override val debugInfo: String,
   override val children: MutableList<EvaluationNode>,

@@ -22,24 +22,22 @@ private fun <T> Term<T>.generateEvaluation(
   interval: Pair<Int, Int>?,
   evalTickID: Int?
 ): EvaluationNode {
-  return when(this) {
-    is Constant -> ConstEvalNode(this, this.str())
-    is Variable -> {
-      if (evalInstance.hasBoundBaseVariable(this)) {
-        ConstEvalNode(this, this.str())
-      } else {
-        when (evaluationType) {
-          EvaluationType.EVALUATE -> {
-            EvalNode(this, mutableListOf(), evalTickID, null, null, EmissionType.NONE, this.str())
-          }
-          EvaluationType.WITNESS -> {
+  return when(evaluationType) {
+    EvaluationType.EVALUATE -> EvalNode(this, mutableListOf(), evalTickID, null, null, EmissionType.NONE, this.str())
+    EvaluationType.WITNESS -> {
+      when(this) {
+        is Constant -> WitnessEvalNode(this, mutableListOf(), interval, null, null, EmissionType.NONE, this.str())
+        is Variable -> {
+          if (evalInstance.hasBoundBaseVariable(this)) {
+            WitnessEvalNode(this, mutableListOf(), interval, null, null, EmissionType.NONE, this.str())
+          } else {
             WitnessEvalNode(this, mutableListOf(), interval, null, "wtns_${evalInstance.generateID()}",
               EmissionType.DECLARE_CONST, this.str())
           }
-          EvaluationType.UNIV_INST -> error("This path should not be reached.")
         }
       }
     }
+    EvaluationType.UNIV_INST -> error("This path should not be reached.")
   }
 }
 
@@ -60,11 +58,11 @@ private fun Formula.generateEvaluation(
     is Until -> {
       generateEvaluationForUntil(this, evalInstance, evaluationType, interval, evalTickID, emittedFindingTID, precond)
     }
-    is TT -> ConstEvalNode(this)
     is Binding<*> -> {
       generateEvaluationForBinding(this, evalInstance, evaluationType, interval, evalTickID,
         emittedFindingTID, precond)
     }
+    //is TT -> ConstEvalNode(this)
     else -> error("The generation is not yet available for the formula type \"${this::class.simpleName}\".")
   }
 }
