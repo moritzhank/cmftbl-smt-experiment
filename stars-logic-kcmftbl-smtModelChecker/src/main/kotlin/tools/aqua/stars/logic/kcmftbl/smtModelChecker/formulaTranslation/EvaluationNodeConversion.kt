@@ -4,14 +4,20 @@ import tools.aqua.stars.core.types.EntityType
 import tools.aqua.stars.logic.kcmftbl.dsl.*
 
 fun <T: EntityType<*, *, *, *, *>>
-        ((CallContextBase<T>) -> FormulaBuilder).generateEvaluation(holdsFor: T, name: String) : EvaluationNode {
-  // TODO: Use TickData to eliminate universal quantification
+        ((CallContextBase<T>) -> FormulaBuilder).generateEvaluation(
+  holdsFor: T,
+  name: String,
+  ticks: Array<Double>
+) : EvaluationNode {
   val evalInstance = EvaluationInstance()
   val ccb = CCB<T>().apply { debugInfo = name }
+  // TODO: WHAT ABOUT holdsFor? -> Has to be added assertion that id is equal
+  // TODO: HOW TO RETURN EVALUATION INSTANCE?
   val ccbSMTName = "predv_${evalInstance.generateID()}"
   evalInstance.addIntroducedBaseVariable(ccb, ccbSMTName)
   val formula = this(ccb).getPhi().first()
   val evalInnerNode = formula.generateEvaluation(evalInstance, EvaluationType.EVALUATE, null, 0, null, null)
+  eliminateUniversalQuantification(evalInstance, evalInnerNode, ticks)
   return OrgaEvalNode("UnaryPredicate (${ccb.debugInfo})", mutableListOf(evalInnerNode), ccbSMTName)
 }
 
@@ -23,7 +29,7 @@ private fun <T> Term<T>.generateEvaluation(
   evalTickID: Int?
 ): EvaluationNode {
   return when(evaluationType) {
-    EvaluationType.EVALUATE -> EvalNode(this, mutableListOf(), evalTickID, null, null, EmissionType.NONE, this.str())
+    EvaluationType.EVALUATE -> EvalNode(this, mutableListOf(), evalTickID!!, null, null, EmissionType.NONE, this.str())
     EvaluationType.WITNESS -> {
       when(this) {
         is Constant -> WitnessEvalNode(this, mutableListOf(), interval, null, null, EmissionType.NONE, this.str())
@@ -42,7 +48,7 @@ private fun <T> Term<T>.generateEvaluation(
 }
 
 /** Generates an [EvaluationNode] from a [Formula]. */
-private fun Formula.generateEvaluation(
+fun Formula.generateEvaluation(
     evalInstance: EvaluationInstance,
     evaluationType: EvaluationType,
     interval: Pair<Int, Int>?,
@@ -80,7 +86,7 @@ private fun generateEvaluationForEvaluableRelation(
     EvaluationType.EVALUATE -> {
       val evalNodeLhs = evalRelation.lhs.generateEvaluation(evalInstance, evaluationType, interval, evalTickID)
       val evalNodeRhs = evalRelation.rhs.generateEvaluation(evalInstance, evaluationType, interval, evalTickID)
-      EvalNode(evalRelation, mutableListOf(evalNodeLhs, evalNodeRhs), evalTickID, precond, null, EmissionType.NONE)
+      EvalNode(evalRelation, mutableListOf(evalNodeLhs, evalNodeRhs), evalTickID!!, precond, null, EmissionType.NONE)
     }
     EvaluationType.WITNESS -> {
       val evalNodeLhs = evalRelation.lhs.generateEvaluation(evalInstance, evaluationType, interval, evalTickID)
@@ -108,7 +114,7 @@ private fun generateEvaluationForUntil(
         null)
       val evalNodeLhs = until.lhs.generateEvaluation(evalInstance, EvaluationType.UNIV_INST, until.interval, null,
         null, TickPrecondition(evalNodeRhs as WitnessEvalNode, Relation.Lt))
-      EvalNode(until, mutableListOf(evalNodeLhs, evalNodeRhs), evalTickID, precond, null, EmissionType.NONE)
+      EvalNode(until, mutableListOf(evalNodeLhs, evalNodeRhs), evalTickID!!, precond, null, EmissionType.NONE)
     }
     else -> error("Nested evaluations with Until are not supported yet.")
   }
@@ -130,7 +136,7 @@ private fun generateEvaluationForBinding(
       evalInstance.addBoundBaseVariable(binding.ccb, boundVarID)
       val evalNode = binding.inner.generateEvaluation(evalInstance, EvaluationType.EVALUATE, null, evalTickID, null,
         null)
-      EvalNode(binding, mutableListOf(evalTerm, evalNode), evalTickID, precond, boundVarID, EmissionType.DECLARE_CONST,
+      EvalNode(binding, mutableListOf(evalTerm, evalNode), evalTickID!!, precond, boundVarID, EmissionType.DECLARE_CONST,
         binding.ccb.debugInfo ?: ""
       )
     }

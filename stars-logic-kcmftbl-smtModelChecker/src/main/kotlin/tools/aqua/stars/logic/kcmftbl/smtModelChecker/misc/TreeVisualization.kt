@@ -23,9 +23,28 @@ import java.net.URLEncoder
 import java.util.UUID
 
 interface TreeVisualizationNode {
+
   fun getTVNContent(): String
 
   val children: List<TreeVisualizationNode>
+
+  fun iterator() = object : Iterator<TreeVisualizationNode> {
+
+    private val queue = ArrayDeque<TreeVisualizationNode>().apply {
+      add(this@TreeVisualizationNode)
+    }
+
+    override fun hasNext() = queue.isNotEmpty()
+
+    override fun next(): TreeVisualizationNode {
+      val next = queue.removeFirst()
+      next.children.forEach {
+        queue.add(it)
+      }
+      return next
+    }
+  }
+
 }
 
 fun TreeVisualizationNode.generateGraphVizCode(): String {

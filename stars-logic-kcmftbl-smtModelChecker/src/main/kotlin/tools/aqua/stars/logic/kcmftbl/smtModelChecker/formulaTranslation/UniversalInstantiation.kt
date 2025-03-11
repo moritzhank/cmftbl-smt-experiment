@@ -1,30 +1,59 @@
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation
 
+import tools.aqua.stars.logic.kcmftbl.dsl.CCB
 import tools.aqua.stars.logic.kcmftbl.dsl.Formula
-/*
-fun instantiateUniversalQuantification(evalInstance: EvaluationInstance, evalNode: EvaluationNode, currentTick: Int,
-                                       ticks: Array<Double>): List<EvaluationNode> {
-  require(evalNode.evaluationType == EvaluationType.UNIV_INST)
-  require(evalNode.evaluable is Formula) { "This should be a formula." }
-  val ticksInInterval = getTicksInInterval(currentTick, ticks, evalNode.interval)
-  val result = mutableListOf<EvaluationNode>()
-  ticksInInterval.forEach {
-    val newNode = evalNode.evaluable.convert(evalInstance, EvaluationType.EVALUATE, null, it.first,
-      evalNode.emittedFindingTID, evalNode.tickPrecons)
-    result.add(newNode)
+import tools.aqua.stars.logic.kcmftbl.dsl.Variable
+
+fun eliminateUniversalQuantification(
+  evalInstance: EvaluationInstance,
+  rootNode: EvaluationNode,
+  ticks: Array<Double>
+) {
+  while(true) {
+    val listOfNodes = rootNode.iterator().asSequence().toList()
+    val universalEvalNode = listOfNodes.find { it is UniversalEvalNode } as? UniversalEvalNode
+    if (universalEvalNode == null) {
+      break
+    }
+    val parent = listOfNodes.find { it.children.contains(universalEvalNode) } as EvalNode
+    instantiateUniversalQuantification(evalInstance, universalEvalNode, parent, ticks)
   }
-  return result
 }
-/*
-private fun applyUniversalInstantiation(evalNode: EvaluationNode, currentTick: Int, topMost: Boolean = true): EvaluationNode {
-  val children = evalNode.children.map { applyUniversalInstantiation(it, currentTick, false) }
-  val newEmittedFindingId = null
-  val newEmittedID = evalNode.emittedID // Has to be generated new or?
-  val emissionType = EmissionType.NONE // Has to be again calculated?
-  return evalNode.copy(evalNode.evaluable, EvaluationType.EVALUATE, children.toMutableList(), null, currentTick,
-    newEmittedFindingId, evalNode.tickPrecons, newEmittedID, emissionType)
+
+private fun instantiateUniversalQuantification(
+  evalInstance: EvaluationInstance,
+  node: UniversalEvalNode,
+  parent: EvalNode,
+  ticks: Array<Double>
+) {
+  val currentTick = parent.evalTickID
+  val ticksInInterval = getTicksInInterval(currentTick, ticks, node.interval)
+  val instantiatedNodes = mutableListOf<EvaluationNode>()
+  ticksInInterval.forEach {
+    val f = (node.evaluable as Formula)
+    var newNode = f.generateEvaluation(evalInstance, EvaluationType.EVALUATE, null, it.first, null,
+      node.tickPrecondition)
+    getUsedUnboundVariables(evalInstance, newNode).forEach {
+      newNode = OrgaEvalNode("UINST_VAR ($it)", mutableListOf(newNode), "uinst_${evalInstance.generateID()}", it)
+    }
+    instantiatedNodes.add(newNode)
+  }
+  val childIndex = parent.children.indexOf(node)
+  parent.children.removeAt(childIndex)
+  parent.children.add(childIndex, OrgaEvalNode("UNIV_INST", instantiatedNodes, null))
 }
- */
+
+private fun getUsedUnboundVariables(evalInstance: EvaluationInstance, node: EvaluationNode): Set<CCB<*>> {
+  val usedUnboundVariables = mutableSetOf<CCB<*>>()
+  node.iterator().asSequence().forEach { elem ->
+    val n = elem as EvaluationNode
+    // TODO: What is with internal binding terms??!
+    if (n is EvalNode && n.evaluable is Variable<*> && !evalInstance.hasBoundBaseVariable(n.evaluable)) {
+      usedUnboundVariables.add(n.evaluable.callContext.base())
+    }
+  }
+  return usedUnboundVariables
+}
 
 private fun getTicksInInterval(currentTick: Int, ticks: Array<Double>, interval: Pair<Int, Int>?): List<Pair<Int, Double>> {
   val listOfIndexedTicks = ticks.mapIndexed { index, tick -> Pair(index, tick) }.toMutableList()
@@ -47,4 +76,3 @@ private fun testsForGetTicksInInterval() {
   result = getTicksInInterval(1, ticks, Pair(4, 6))
   require("[]" == result.toString())
 }
- */

@@ -1,7 +1,7 @@
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation
 
+import tools.aqua.stars.logic.kcmftbl.dsl.CCB
 import tools.aqua.stars.logic.kcmftbl.dsl.Evaluable
-import tools.aqua.stars.logic.kcmftbl.dsl.Term
 import tools.aqua.stars.logic.kcmftbl.dsl.str
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.TreeVisualizationNode
 
@@ -24,7 +24,7 @@ data class EvalNode(
   val evaluable: Evaluable,
   override val children: MutableList<EvaluationNode>,
   /** Defines which tick is evaluated. */
-  val evalTickID: Int?,
+  val evalTickID: Int,
   /**
    * The precondition describes a constraint on the evaluated interval: precon => phi.
    * This is needed, because certain constraints on the evaluation interval are not known before the evaluation.
@@ -79,13 +79,14 @@ data class WitnessEvalNode(
 data class OrgaEvalNode(
   override val debugInfo: String,
   override val children: MutableList<EvaluationNode>,
-  override val emittedID: String?
+  override val emittedID: String?,
+  val referenceCCB: CCB<*>? = null
 ): EvaluationNode {
 
   override val emissionType: EmissionType = if(emittedID == null) EmissionType.NONE else EmissionType.DECLARE_CONST
 
   override fun getTVNContent(): String {
-    return "$debugInfo\\n" + if (emittedID != null) "Emits DEC_CONST with ID: $emittedID\\n" else ""
+    return "ORGA ($debugInfo)\\n" + if (emittedID != null) "Emits DEC_CONST with ID: $emittedID\\n" else ""
   }
 
 }

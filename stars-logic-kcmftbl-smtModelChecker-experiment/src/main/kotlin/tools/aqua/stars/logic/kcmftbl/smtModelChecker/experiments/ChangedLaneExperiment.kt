@@ -38,8 +38,7 @@ val nestedUntilPred = formula { v: CCB<Vehicle> ->
 }
 
 fun main() {
-  val evalNode = untilPred.generateEvaluation(emptyVehicle(id = 1), "v")
-
+  val evalNode = untilPred.generateEvaluation(emptyVehicle(id = 1), "v", arrayOf(1.0, 2.0, 3.0, 4.0, 5.5))
   renderTree(evalNode.generateGraphVizCode())
   renderLatexFormula(formulaToLatex(untilPred(CCB<Vehicle>().apply { debugInfo = "v" })))
 }

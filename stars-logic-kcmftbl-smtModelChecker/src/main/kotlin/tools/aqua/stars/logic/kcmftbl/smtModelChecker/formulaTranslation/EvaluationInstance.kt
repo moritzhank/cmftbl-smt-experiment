@@ -18,6 +18,7 @@ class EvaluationInstance {
    * Primarily used such that nodes, other than [WitnessEvalNode], representing variables are interpreted as
    * [ConstEvalNode].
    * TODO: Needs further design if nested formulas are introduced.
+   * TODO: NOT NEEDED?!?!?
    */
   private val otherIntroducedVars = mutableSetOf<CCB<*>>()
 
@@ -37,17 +38,20 @@ class EvaluationInstance {
   }
 
   /** See description of [otherIntroducedVars]. */
+  // TODO: NOT NEEDED?!?!?
   fun hasIntroducedBaseVariable(variable: Variable<*>): Boolean {
     return otherIntroducedVars.contains(variable.callContext.base())
   }
 
   /** See description of [otherIntroducedVars]. */
+  // TODO: NOT NEEDED?!?!?
   fun addIntroducedBaseVariable(ccb: CCB<*>, smtName: String) {
     otherIntroducedVars.add(ccb)
     variableToSMTName[ccb] = smtName
   }
 
   /** Note: Throws error if bound variable is not previously saved.  */
+  // TODO: NOT NEEDED?!?!?
   fun getBaseVariableSMTName(ccb: CCB<*>) = variableToSMTName[ccb]!!
 
 }
