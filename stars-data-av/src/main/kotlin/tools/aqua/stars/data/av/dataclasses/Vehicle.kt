@@ -22,6 +22,8 @@ package tools.aqua.stars.data.av.dataclasses
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlinx.serialization.Serializable
+import tools.aqua.stars.data.av.serializer.VehicleSerializer
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.encoding.SmtAllowNonTrivialGetter
 
 /**
  * Data class for vehicles.
@@ -39,7 +41,7 @@ import kotlinx.serialization.Serializable
  * @property acceleration The current acceleration m/s².
  * @property angularVelocity The current angular velocity.
  */
-@Serializable
+@Serializable(with = VehicleSerializer::class)
 data class Vehicle(
     override val id: Int,
     override val tickData: TickData,
@@ -60,6 +62,7 @@ data class Vehicle(
     get() = sqrt(velocity.x.pow(2) + velocity.y.pow(2) + velocity.z.pow(2))
 
   /** Effective velocity in km/h based on [effVelocityInMPerS]. */
+  @SmtAllowNonTrivialGetter
   val effVelocityInKmPH: Double
     get() = this.effVelocityInMPerS * 3.6
 

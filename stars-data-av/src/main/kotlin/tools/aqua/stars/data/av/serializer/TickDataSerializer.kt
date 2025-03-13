@@ -45,15 +45,13 @@ class TickDataSerializer : KSerializer<TickData> {
   override fun serialize(encoder: Encoder, value: TickData) {
     encoder.encodeStructure(descriptor) {
       encodeSerializableElement(descriptor, 0, TickDataUnitSeconds.serializer(), value.currentTick)
-      encodeSerializableElement(
-          descriptor, 1, ListSerializer(TrafficLight.serializer()), value.trafficLights)
+      encodeSerializableElement(descriptor, 1, ListSerializer(TrafficLight.serializer()), value.trafficLights)
       encodeSerializableElement(descriptor, 2, ListSerializer(Block.serializer()), value.blocks)
       encodeSerializableElement(descriptor, 3, WeatherParameters.serializer(), value.weather)
       encodeSerializableElement(descriptor, 4, Daytime.serializer(), value.daytime)
       encodeSerializableElement(descriptor, 5, Segment.serializer(), value.segment)
       encodeSerializableElement(descriptor, 6, ListSerializer(Vehicle.serializer()), value.vehicles)
-      encodeSerializableElement(
-          descriptor, 7, ListSerializer(Pedestrian.serializer()), value.pedestrians)
+      encodeSerializableElement(descriptor, 7, ListSerializer(Pedestrian.serializer()), value.pedestrians)
     }
   }
 
