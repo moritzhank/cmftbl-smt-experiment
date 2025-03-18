@@ -41,3 +41,7 @@ tasks.register<Jar>("testArchive") {
 }
 
 artifacts { add("test", tasks["testArchive"]) }
+
+tasks.jar {
+  archiveFileName = "${archiveBaseName.get()}.jar"
+}

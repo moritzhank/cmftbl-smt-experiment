@@ -27,6 +27,10 @@ application {
   mainClass.set("tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments.$experimentClass")
 }
 
+tasks.jar {
+  archiveFileName = "${archiveBaseName.get()}.jar"
+}
+
 tasks.distZip {
   archiveFileName.set("${experimentClass.dropLast(2)}.zip")
   destinationDirectory.set(rootProject.file("_experiment${File.separator}"))

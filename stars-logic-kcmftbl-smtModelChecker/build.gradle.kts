@@ -31,3 +31,7 @@ dependencies {
   testImplementation(project(mapOf("path" to ":stars-data-av")))
   testImplementation(project(":stars-data-av", "test"))
 }
+
+tasks.jar {
+  archiveFileName = "${archiveBaseName.get()}.jar"
+}

@@ -28,3 +28,7 @@ dependencies {
   implementation(libs.slf4j.api)
   implementation(libs.slf4j.simple)
 }
+
+tasks.jar {
+  archiveFileName = "${archiveBaseName.get()}.jar"
+}

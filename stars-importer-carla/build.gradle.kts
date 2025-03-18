@@ -33,3 +33,7 @@ dependencies {
   testImplementation(project(":stars-data-av", "test"))
   implementation(libs.kotlinx.serialization.json)
 }
+
+tasks.jar {
+  archiveFileName = "${archiveBaseName.get()}.jar"
+}
