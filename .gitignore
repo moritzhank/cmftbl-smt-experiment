@@ -6,7 +6,7 @@
 /stars-data-av/analysis-result-logs
 smtSolverSettings.json
 dataSettings.json
-/smtTmp
+/_smtTmp
 /_formulaSvgs
 /_treeSvgs
-/experiment
+/_experiment

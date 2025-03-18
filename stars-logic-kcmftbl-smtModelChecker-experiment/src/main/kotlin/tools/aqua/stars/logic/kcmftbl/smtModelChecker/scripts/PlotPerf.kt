@@ -1,46 +1,31 @@
-/*
- * Copyright 2024-2025 The STARS Project Authors
- * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts
 
 /** @param outputFile If null the plot will not be saved but displayed on screen */
 fun plotPerf(
-    outputFile: String?,
-    title: String,
-    xlabel: String,
-    ylabel: String,
-    fileName1: String,
-    legend1: String,
-    scaling1: Float,
-    fileName2: String? = null,
-    legend2: String? = null,
-    scaling2: Float? = null
-) {
-  val secondPlot = fileName2 != null && legend2 != null && scaling2 != null
-  var args =
-      arrayOf(
-          title, xlabel, ylabel, outputFile ?: "<plot>", fileName1, legend1, scaling1.toString())
-  if (secondPlot) {
-    requireNotNull(fileName2)
-    requireNotNull(legend2)
-    requireNotNull(scaling2)
-    args = arrayOf(*args, fileName2, legend2, scaling2.toString())
+    vararg files: String,
+    width: Int? = null,
+    height: Int? = null,
+    title: String? = null,
+    xLabel: String? = null,
+    outputFile: String? = null)
+{
+  var args = mutableListOf(*files)
+  if (width != null) {
+    args.add(0, "-W $width")
   }
-  val proc = PythonCommandLineWrapper.runScript("plotPerf.py", *args)
+  if (height != null) {
+    args.add(0, "-H $height")
+  }
+  if (title != null) {
+    args.add(0, "--title $title")
+  }
+  if (xLabel != null) {
+    args.add(0, "--x_label $xLabel")
+  }
+  if (outputFile != null) {
+    args.add(0, "-S $outputFile")
+  }
+  val proc = PythonCommandLineWrapper.runScript("plotPerf.py", *args.toTypedArray())
   if (proc.exitValue() != 0) {
     throw RuntimeException(proc.inputReader().readText() + proc.errorReader().readText())
   }

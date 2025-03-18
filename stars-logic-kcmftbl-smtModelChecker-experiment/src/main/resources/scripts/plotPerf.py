@@ -1,52 +1,68 @@
-import sys
-import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import numpy as np
+import argparse
+import io
 
-def main():
-    title = sys.argv[1]
-    xlabel = sys.argv[2]
-    ylabel = sys.argv[3]
-    saveFile = sys.argv[4]
+def main(args):
+    # Parse specified input files
+    parsedFiles = [] # shape of items: [dataX, dataY1, dataY2, color, label]
+    for inpFile in args.files:
+        try:
+            content = open(inpFile, "r").read()
+            contentLines = content.splitlines()
+            color = contentLines[8][9:]
+            label = contentLines[9][10:]
+            contentF = io.StringIO(content)
+            arr = np.loadtxt(contentF, delimiter=",", skiprows=11)
+            dataX = arr[:,0]
+            dataY1 = arr[:,-2]
+            dataY2 = arr[:,-1]
+            parsedFiles.append([dataX, dataY1, dataY2, color, label])
+        except Exception as e:
+            print(f"An exception occurred during the parsing of {inpFile}!\n{e}")
 
-    # data1
-    fileName1 = sys.argv[5]
-    legend1 = sys.argv[6]
-    scaling1 = sys.argv[7]
-    data1 = np.loadtxt(open(fileName1, "rb"), delimiter=",", skiprows=8)
-    data1_x = np.concatenate(data1[:, :1], axis=0)
-    repetitions = data1[:, 1:].shape[1]
-    data1_y = (data1[:, 1:] @ np.ones((repetitions, 1))) / repetitions * float(scaling1)
-
-    # data2
-    if len(sys.argv) > 8:
-        fileName2 = sys.argv[8]
-        legend2 = sys.argv[9]
-        scaling2 = sys.argv[10]
-        data2 = np.loadtxt(open(fileName2, "rb"), delimiter=",", skiprows=8)
-        data2_x = np.concatenate(data2[:, :1], axis=0)
-        repetitions = data2[:, 1:].shape[1]
-        data2_y = (data2[:, 1:] @ np.ones((repetitions, 1))) / repetitions * float(scaling2)
-
-    # Plot
-    plt.figure(figsize=(8, 6))
-
-    # Settings for publications
+    # Plotting
     plt.rcParams["font.size"] = 14
-    plt.tight_layout()
+    fig, ax1 = plt.subplots(2, figsize=(args.width, args.height), gridspec_kw={'height_ratios': [2, 1]}, sharex=True)
+    ax1[0].set_ylabel("Dauer [s]")
+    ax1[0].yaxis.set_major_locator(ticker.MaxNLocator(nbins=10))
+    ax1[0].grid(axis="y")
+    ax1[1].set_xlabel(args.x_label)
+    ax1[1].set_ylabel("Max. Speicher-\nbedarf [GB]")
+    ax1[1].yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+    ax1[1].grid(axis="y")
 
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.plot(data1_x, data1_y, marker="o",label=legend1,color="red",lw=3,markersize=6)
-    if len(sys.argv) > 8:
-        plt.plot(data2_x, data2_y, marker="o",label=legend2,color="blue",lw=3,markersize=6)
-    legend = plt.legend(framealpha=1)
+    for parsedFile in parsedFiles:
+        ax1[0].plot(parsedFile[0], parsedFile[1], color=parsedFile[3], marker="o", label=parsedFile[4], lw=2, markersize=6)
+        ax1[1].plot(parsedFile[0], parsedFile[2], color=parsedFile[3], linestyle='-', label=parsedFile[4], lw=2)
+
+
+    legend = ax1[0].legend(loc="upper left", framealpha=1)
     legend.get_frame().set_edgecolor("black")
-    plt.grid()
-    if saveFile == "<plot>":
+    #legend = ax1[1].legend(loc="upper left", framealpha=1)
+    #legend.get_frame().set_edgecolor("black")
+    fig.suptitle(args.title)
+    fig.tight_layout()
+    if args.save == None:
         plt.show()
+        input("Press Enter to exit...")
     else:
-        plt.savefig(saveFile, dpi=300)
-    
+        plt.savefig(args.saveFile, dpi=300)
+
+def addPlotToUpper(ax, dataX, dataY, color, label):
+    ax.plot(dataX, dataY, color=color, marker="o", label=label, lw=2, markersize=6)
+
+def addPlotToLower(ax, dataX, dataY, color, label):
+    ax.plot(dataX, dataY, color=color, linestyle='--', label=label, lw=2)
+
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description="Program for plotting the performance of SMT-Solvers")
+    ap.add_argument("files", type=str, nargs="+", help="Paths to the experiment files")
+    ap.add_argument("-W", "--width", type=int, default=9, help="Width of the plot")
+    ap.add_argument("-H", "--height", type=int, default=7, help="Height of the plot")
+    ap.add_argument("--title", type=str, default="", help="Title of the plot")
+    ap.add_argument("--x_label", type=str, default="", help="Label at the x-axis of the plot")
+    ap.add_argument("-S", "--save", type=str, help="Saves the plot to the specified file")
+    args = ap.parse_args()
+    main(args)

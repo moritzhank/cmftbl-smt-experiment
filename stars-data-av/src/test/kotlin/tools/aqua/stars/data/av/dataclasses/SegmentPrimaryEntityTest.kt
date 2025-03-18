@@ -17,11 +17,11 @@
 
 package tools.aqua.stars.data.av.dataclasses
 
+import tools.aqua.stars.data.av.emptyTickData
+import tools.aqua.stars.data.av.emptyVehicle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import tools.aqua.stars.data.av.emptyTickData
-import tools.aqua.stars.data.av.emptyVehicle
 
 /**
  * This class tests the correctness of the [Segment.primaryEntityId] for [Segment]s. The primary
@@ -37,8 +37,7 @@ class SegmentPrimaryEntityTest {
     val vehicle1 = emptyVehicle(id = 0, egoVehicle = false)
     val vehicle2 = emptyVehicle(id = 1, egoVehicle = false)
     val tickData = emptyTickData(actors = listOf(vehicle1, vehicle2))
-    val segment =
-        Segment(segmentSource = "", mainInitList = listOf(tickData), simulationRunId = "1")
+    val segment = Segment(segmentSource = "", mainInitList = listOf(tickData), simulationRunId = "1")
     assertFailsWith<IllegalStateException> { segment.primaryEntityId }
   }
 

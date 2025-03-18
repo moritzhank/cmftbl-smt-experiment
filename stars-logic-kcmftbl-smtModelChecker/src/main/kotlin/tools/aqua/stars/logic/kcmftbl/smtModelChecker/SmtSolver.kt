@@ -32,7 +32,7 @@ enum class SmtSolver(val solverName: String) {
 
 /** Save the SMT-program [program] in a file. */
 fun saveSmtFile(program: String, solver: SmtSolver = SmtSolver.CVC5) {
-  val smtTmpDirPath = getAbsolutePathFromProjectDir("smtTmp")
+  val smtTmpDirPath = getAbsolutePathFromProjectDir("_smtTmp")
   File(smtTmpDirPath).mkdir()
   val smt2FilePath = "$smtTmpDirPath${File.separator}${UUID.randomUUID()}.smt2"
   val smt2File = File(smt2FilePath).apply { writeText(program) }
@@ -47,7 +47,7 @@ fun runSmtSolver(
     memoryProfilerCallback: ((Long) -> Unit)? = null
 ): String {
   val solverBinPath = requireSolverBinPath(solver)
-  val smtTmpDirPath = getAbsolutePathFromProjectDir("smtTmp")
+  val smtTmpDirPath = getAbsolutePathFromProjectDir("_smtTmp")
   File(smtTmpDirPath).mkdir()
   val smt2FilePath = "$smtTmpDirPath${File.separator}${UUID.randomUUID()}.smt2"
   val smt2File = File(smt2FilePath).apply { writeText(program) }

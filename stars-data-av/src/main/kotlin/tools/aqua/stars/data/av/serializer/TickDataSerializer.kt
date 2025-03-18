@@ -28,30 +28,41 @@ import kotlinx.serialization.encoding.encodeStructure
 import tools.aqua.stars.data.av.dataclasses.*
 
 /** Custom [KSerializer] for [TickData]. */
-class TickDataSerializer : KSerializer<TickData> {
+object TickDataSerializer : KSerializer<TickData> {
 
-  override val descriptor: SerialDescriptor =
-      buildClassSerialDescriptor("TickData") {
-        element<TickDataUnitSeconds>("currentTick")
-        element<List<TrafficLight>>("trafficLights")
-        element<List<Block>>("blocks")
-        element<WeatherParameters>("weather")
-        element<Daytime>("daytime")
-        element<Segment>("segment")
-        element<List<Vehicle>>("vehicles")
-        element<List<Pedestrian>>("pedestrians")
-      }
+  private val tickDataUnitSecondsSerializer by lazy { TickDataUnitSeconds.serializer() }
+  private val trafficLightListSerializer by lazy { ListSerializer(TrafficLight.serializer()) }
+  private val blockListSerializer by lazy { ListSerializer(Block.serializer()) }
+  private val weatherParametersSerializer by lazy { WeatherParameters.serializer() }
+  private val dayTimeSerializer by lazy { Daytime.serializer() }
+  private val segmentSerializer by lazy { Segment.serializer() }
+  private val pedestrianListSerializer by lazy { ListSerializer(Pedestrian.serializer()) }
+  private val vehicleListSerializer by lazy { ListSerializer(VehicleSerializer) }
+
+  override val descriptor: SerialDescriptor by lazy {
+    buildClassSerialDescriptor("TickData") {
+      element<TickDataUnitSeconds>("currentTick")
+      element<List<TrafficLight>>("trafficLights")
+      element<List<Block>>("blocks")
+      element<WeatherParameters>("weather")
+      element<Daytime>("daytime")
+      element<Segment>("segment")
+      element<List<Vehicle>>("vehicle")
+      element<List<Pedestrian>>("pedestrians")
+    }
+  }
+
 
   override fun serialize(encoder: Encoder, value: TickData) {
     encoder.encodeStructure(descriptor) {
-      encodeSerializableElement(descriptor, 0, TickDataUnitSeconds.serializer(), value.currentTick)
-      encodeSerializableElement(descriptor, 1, ListSerializer(TrafficLight.serializer()), value.trafficLights)
-      encodeSerializableElement(descriptor, 2, ListSerializer(Block.serializer()), value.blocks)
-      encodeSerializableElement(descriptor, 3, WeatherParameters.serializer(), value.weather)
-      encodeSerializableElement(descriptor, 4, Daytime.serializer(), value.daytime)
-      encodeSerializableElement(descriptor, 5, Segment.serializer(), value.segment)
-      encodeSerializableElement(descriptor, 6, ListSerializer(Vehicle.serializer()), value.vehicles)
-      encodeSerializableElement(descriptor, 7, ListSerializer(Pedestrian.serializer()), value.pedestrians)
+      encodeSerializableElement(descriptor, 0, tickDataUnitSecondsSerializer, value.currentTick)
+      encodeSerializableElement(descriptor, 1, trafficLightListSerializer, value.trafficLights)
+      encodeSerializableElement(descriptor, 2, blockListSerializer, value.blocks)
+      encodeSerializableElement(descriptor, 3, weatherParametersSerializer, value.weather)
+      encodeSerializableElement(descriptor, 4, dayTimeSerializer, value.daytime)
+      encodeSerializableElement(descriptor, 5, segmentSerializer, value.segment)
+      encodeSerializableElement(descriptor, 6, vehicleListSerializer, value.vehicles)
+      encodeSerializableElement(descriptor, 7, pedestrianListSerializer, value.pedestrians)
     }
   }
 

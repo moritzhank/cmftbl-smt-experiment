@@ -17,51 +17,46 @@
 
 package tools.aqua.stars.data.av.serializer
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
 import tools.aqua.stars.data.av.dataclasses.*
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.dataTranslation.encoding.buildSafeSerialDescriptor
 
 /** Custom [KSerializer] for [Vehicle]. */
-class VehicleSerializer : KSerializer<Vehicle> {
+@ExperimentalSerializationApi
+object VehicleSerializer : KSerializer<Vehicle> {
 
-  override val descriptor: SerialDescriptor =
-      buildClassSerialDescriptor("Vehicle") {
-        element<Int>("id")
-        element<TickData>("tickData")
-        element<Double>("positionOnLane")
-        element<Lane>("lane")
-        element<String>("typeId")
-        element<Boolean>("isEgo")
-        element<Location>("location")
-        element<Vector3D>("forwardVector")
-        element<Rotation>("rotation")
-        element<Vector3D>("velocity")
-        element<Vector3D>("acceleration")
-        element<Vector3D>("angularVelocity")
-        element<Double>("effVelocityInKmPH")
-      }
+  private val tickDataSerializer by lazy { TickDataSerializer }
+  private val laneSerializer by lazy { Lane.serializer() }
+  private val locationSerializer by lazy { Location.serializer() }
+  private val vector3DSerializer by lazy { Vector3D.serializer() }
+  private val rotationSerializer by lazy { Rotation.serializer() }
+
+  override val descriptor: SerialDescriptor by lazy {
+    buildSafeSerialDescriptor(Vehicle::class) {
+      if (it == TickData.javaClass) TickDataSerializer else null
+    }
+  }
 
   override fun serialize(encoder: Encoder, value: Vehicle) {
     encoder.encodeStructure(descriptor) {
-      encodeSerializableElement(descriptor, 0, Int.serializer(), value.id)
-      encodeSerializableElement(descriptor, 1, TickData.serializer(), value.tickData)
-      encodeSerializableElement(descriptor, 2, Double.serializer(), value.positionOnLane)
-      encodeSerializableElement(descriptor, 3, Lane.serializer(), value.lane)
-      encodeSerializableElement(descriptor, 4, String.serializer(), value.typeId)
-      encodeSerializableElement(descriptor, 5, Boolean.serializer(), value.isEgo)
-      encodeSerializableElement(descriptor, 6, Location.serializer(), value.location)
-      encodeSerializableElement(descriptor, 7, Vector3D.serializer(), value.forwardVector)
-      encodeSerializableElement(descriptor, 8, Rotation.serializer(), value.rotation)
-      encodeSerializableElement(descriptor, 9, Vector3D.serializer(), value.velocity)
-      encodeSerializableElement(descriptor, 10, Vector3D.serializer(), value.acceleration)
-      encodeSerializableElement(descriptor, 11, Vector3D.serializer(), value.angularVelocity)
-      encodeSerializableElement(descriptor, 12, Double.serializer(), value.effVelocityInKmPH)
+      encodeIntElement(descriptor, 0, value.id)
+      encodeSerializableElement(descriptor, 1, tickDataSerializer, value.tickData)
+      encodeDoubleElement(descriptor, 2, value.positionOnLane)
+      encodeSerializableElement(descriptor, 3, laneSerializer, value.lane)
+      encodeStringElement(descriptor, 4, value.typeId)
+      encodeBooleanElement(descriptor, 5, value.isEgo)
+      encodeSerializableElement(descriptor, 6, locationSerializer, value.location)
+      encodeSerializableElement(descriptor, 7, vector3DSerializer, value.forwardVector)
+      encodeSerializableElement(descriptor, 8, rotationSerializer, value.rotation)
+      encodeSerializableElement(descriptor, 9, vector3DSerializer, value.velocity)
+      encodeSerializableElement(descriptor, 10, vector3DSerializer, value.acceleration)
+      encodeSerializableElement(descriptor, 11, vector3DSerializer, value.angularVelocity)
+      encodeDoubleElement(descriptor, 12, value.effVelocityInKmPH)
     }
   }
 

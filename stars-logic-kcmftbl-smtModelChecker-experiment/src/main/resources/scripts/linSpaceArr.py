@@ -8,7 +8,7 @@ def main():
     result = ""
     for x in np.linspace(start, stop, num):
         result += f"{str(int(x))},"
-    print(f"{result[:-2]}", end='')
+    print(f"{result[:-1]}", end='')
 
 if __name__ == "__main__":
     main()

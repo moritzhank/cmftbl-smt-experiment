@@ -29,7 +29,7 @@ application {
 
 tasks.distZip {
   archiveFileName.set("${experimentClass.dropLast(2)}.zip")
-  destinationDirectory.set(rootProject.file("experiment${File.separator}"))
+  destinationDirectory.set(rootProject.file("_experiment${File.separator}"))
   into("${experimentClass.dropLast(2)}/bin/") {
     from("src/main/resources/")
     include("*/*")
