@@ -10,3 +10,4 @@ dataSettings.json
 /_formulaSvgs
 /_treeSvgs
 /_experiment
+**/src/main/resources/scripts/.vscode/

@@ -29,8 +29,11 @@ interface PerfExperimentSetup {
 abstract class PerfExperiment(val name: String) {
 
   private val expFolderName = "_experiment${File.separator}${name.replaceFirstChar { it.lowercase() }}"
-  private val expFolderPath = getAbsolutePathFromProjectDir(expFolderName)
+  /** Returns the experiment path, guaranteed without '\' or '/' at the end. */
+  val expFolderPath = getAbsolutePathFromProjectDir(expFolderName)
   abstract val memoryProfilerWorkingCond: (MemoryProfiler) -> Boolean
+  protected var useMemoryProfiler = true
+  protected var memoryProfilerSampleRateMs = 100
 
   abstract fun generateSmtLib(exp: PerfExperimentSetup, solver: SmtSolver, logic: String): String
 
@@ -74,9 +77,11 @@ abstract class PerfExperiment(val name: String) {
       val smtLib = generateSmtLib(setup, solver, logic)
       (0 ..< repetitions).forEach { j ->
         val result = runSmtSolver(smtLib, solver, removeSmt2File, getStatsArg(solver), *setup.specialSolverArgs(solver)) { pid ->
-          val memProfiler = MemoryProfiler.start(pid.toInt())
-          if (memoryProfilerWorkingCond(memProfiler)) {
-            memoryStats[i][j] = Pair(memProfiler.maxSysMemUsagePercent, memProfiler.maxProcMemUsageBytes)
+          if (useMemoryProfiler) {
+            val memProfiler = MemoryProfiler.start(pid.toInt(), memoryProfilerSampleRateMs)
+            if (memoryProfilerWorkingCond(memProfiler)) {
+              memoryStats[i][j] = Pair(memProfiler.maxSysMemUsagePercent, memProfiler.maxProcMemUsageBytes)
+            }
           }
         }
         results[i][j] = extractDurationFromOutput(solver, result).inWholeMilliseconds

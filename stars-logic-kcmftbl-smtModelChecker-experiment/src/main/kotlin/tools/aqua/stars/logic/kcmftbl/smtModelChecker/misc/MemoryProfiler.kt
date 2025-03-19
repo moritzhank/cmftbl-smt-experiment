@@ -21,9 +21,13 @@ import kotlin.math.max
 import kotlin.math.min
 import oshi.SystemInfo
 import oshi.software.os.OSProcess
+import kotlin.math.pow
 
-/** Profile the memory used by the system and a particular process. */
-class MemoryProfiler private constructor(private val pid: Int, val sampleRate: Int = 100) {
+/**
+ * Profile the memory used by the system and a particular process.
+ * NOTE: Memory in swap is not recorded! (See [oshi.software.os.OSProcess.getResidentSetSize])
+ */
+class MemoryProfiler private constructor(private val pid: Int, val sampleRate: Int) {
 
   val maxSysMemUsagePercent: Double
   val maxProcMemUsageBytes: Long
@@ -32,7 +36,7 @@ class MemoryProfiler private constructor(private val pid: Int, val sampleRate: I
   val delayMillis: Long
 
   init {
-    var minSysMemAvailable: Long = Long.MAX_VALUE
+    var minSysMemAvailable: Long = -1
     var maxProcMemUsageBytes: Long = -1
     var numSamples: Int = 0
     val startMillis = System.currentTimeMillis()
@@ -46,7 +50,11 @@ class MemoryProfiler private constructor(private val pid: Int, val sampleRate: I
         continue
       }
       t1 = System.currentTimeMillis()
-      minSysMemAvailable = min(sysInfo.hardware.memory.available, minSysMemAvailable)
+      minSysMemAvailable = if (minSysMemAvailable == -1L) {
+        sysInfo.hardware.memory.available
+      } else  {
+        min(sysInfo.hardware.memory.available, minSysMemAvailable)
+      }
       maxProcMemUsageBytes = max(proc.residentSetSize, maxProcMemUsageBytes)
       numSamples++
       try {
@@ -56,13 +64,18 @@ class MemoryProfiler private constructor(private val pid: Int, val sampleRate: I
         break
       }
     }
-    this.maxSysMemUsagePercent = (totalMem - minSysMemAvailable).toDouble() / totalMem
+    this.maxSysMemUsagePercent = if(minSysMemAvailable == -1L) {
+      -1.0
+    } else {
+      (totalMem - minSysMemAvailable).toDouble() / totalMem
+    }
     this.numSamples = numSamples
     this.maxProcMemUsageBytes = maxProcMemUsageBytes
     elapsedMillis = System.currentTimeMillis() - startMillis
   }
 
   companion object {
-    fun start(pid: Int) = MemoryProfiler(pid)
+    fun start(pid: Int, sampleRate: Int = 100) = MemoryProfiler(pid, sampleRate)
+    fun bytesToGB(bytes: Long) = bytes * 10.0.pow(9)
   }
 }

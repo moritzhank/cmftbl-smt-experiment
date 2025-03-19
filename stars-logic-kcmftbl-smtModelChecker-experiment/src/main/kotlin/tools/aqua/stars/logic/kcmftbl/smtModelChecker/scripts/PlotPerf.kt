@@ -5,25 +5,29 @@ fun plotPerf(
     vararg files: String,
     width: Int? = null,
     height: Int? = null,
+    rmMemPlot: Boolean = false,
     title: String? = null,
     xLabel: String? = null,
     outputFile: String? = null)
 {
   var args = mutableListOf(*files)
   if (width != null) {
-    args.add(0, "-W $width")
+    args.addAll(0, listOf("-W", "$width"))
   }
   if (height != null) {
-    args.add(0, "-H $height")
+    args.addAll(0, listOf("-H", "$height"))
+  }
+  if (rmMemPlot) {
+    args.add(0, "--rm_mem_plot")
   }
   if (title != null) {
-    args.add(0, "--title $title")
+    args.addAll(0, listOf("--title", "\"$title\""))
   }
   if (xLabel != null) {
-    args.add(0, "--x_label $xLabel")
+    args.addAll(0, listOf("--x_label", "\"$xLabel\""))
   }
   if (outputFile != null) {
-    args.add(0, "-S $outputFile")
+    args.addAll(0, listOf("-S", outputFile))
   }
   val proc = PythonCommandLineWrapper.runScript("plotPerf.py", *args.toTypedArray())
   if (proc.exitValue() != 0) {

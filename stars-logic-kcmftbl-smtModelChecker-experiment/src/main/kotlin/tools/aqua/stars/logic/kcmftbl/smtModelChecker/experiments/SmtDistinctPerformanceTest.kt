@@ -2,7 +2,10 @@ package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.SmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.MemoryProfiler
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.getDateTimeString
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.linSpaceArr
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.plotPerf
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.smtSolverVersion
 
 class SmtDistinctPerformanceSetup(override val x: Int) : PerfExperimentSetup {
 
@@ -12,12 +15,17 @@ class SmtDistinctPerformanceSetup(override val x: Int) : PerfExperimentSetup {
 
 }
 
-class SmtDistinctPerformanceTest(): PerfExperiment("SmtDistinctPerf") {
+class SmtDistinctPerformanceTest(useMemProfiler: Boolean = true): PerfExperiment("SmtDistinctPerf") {
+
+  init {
+    memoryProfilerSampleRateMs = 10
+    useMemoryProfiler = useMemProfiler
+  }
 
   override val memoryProfilerWorkingCond: (MemoryProfiler) -> Boolean = { memProfiler ->
     memProfiler.maxProcMemUsageBytes != -1L &&
             memProfiler.maxSysMemUsagePercent != -1.0 &&
-            memProfiler.numSamples > 10
+            memProfiler.numSamples > 5
   }
 
   override fun generateSmtLib(
@@ -42,17 +50,72 @@ class SmtDistinctPerformanceTest(): PerfExperiment("SmtDistinctPerf") {
 
 }
 
-fun main() {
-  val rangeOfDistinctStatements = linSpaceArr(10_000, 100_000, 30).map { SmtDistinctPerformanceSetup(it) }
-  val res = SmtDistinctPerformanceTest().runExperiment(
+fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
+  val resMaxSolverMemUsageGBLambda: (List<Long>) -> String = { list ->
+    var numberMinusOne = list.size
+    val acc = 0L
+    list.forEach {
+      if (it != -1L) {
+        acc + it
+        numberMinusOne--
+      }
+    }
+    if (numberMinusOne > 0) {
+      "-1"
+    } else {
+      val resBytes = ((1.0 * acc) / list.size).toLong()
+      val resGB = MemoryProfiler.bytesToGB(resBytes)
+      resGB.toString()
+    }
+  }
+
+  // Setup
+  var rangeOfDistinctStatements0 = linSpaceArr(2, 3_000, 10).map { SmtDistinctPerformanceSetup(it) }
+  val rangeOfDistinctStatements1 = linSpaceArr(3_000, 100_000, 30).map { SmtDistinctPerformanceSetup(it) }
+  var rangeOfDistinctStatements = rangeOfDistinctStatements0.toMutableList().apply { addAll(rangeOfDistinctStatements1) }
+
+  // Z3
+  val z3Version = smtSolverVersion(SmtSolver.Z3)
+  val resZ3 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
     rangeOfDistinctStatements,
     SmtSolver.Z3,
     "UF",
-    1,
+    3,
     "#034B7B",
-    "Z3 v4.13.4 (avg of 3x)",
+    "Z3 v$z3Version (avg of 3x)",
     { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toLong().toString() },
-    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toLong().toString() }
+    resMaxSolverMemUsageGBLambda
   )
-  println(res)
+
+  // YICES
+  val yicesVersion = smtSolverVersion(SmtSolver.YICES)
+  val resYices = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
+    rangeOfDistinctStatements,
+    SmtSolver.YICES,
+    "UF",
+    3,
+    "#44B7C2",
+    "Yices v$yicesVersion (avg of 3x)",
+    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toLong().toString() },
+    resMaxSolverMemUsageGBLambda
+  )
+
+  // CVC5
+  val cvc5Version = smtSolverVersion(SmtSolver.CVC5)
+  val resCVC5 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
+    rangeOfDistinctStatements0,
+    SmtSolver.CVC5,
+    "UF",
+    3,
+    "#808080",
+    "CVC5 v$cvc5Version (avg of 3x)",
+    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toLong().toString() },
+    resMaxSolverMemUsageGBLambda
+  )
+  val outputFile = "${SmtDistinctPerformanceTest().expFolderPath}/graph_${getDateTimeString()}.png"
+  plotPerf(resZ3, resYices, resCVC5, title = "Distinct Experiment", xLabel = "Unterschiedliche Individuen", outputFile = outputFile)
+}
+
+fun main() {
+  runSmtDistinctPerformanceTest()
 }

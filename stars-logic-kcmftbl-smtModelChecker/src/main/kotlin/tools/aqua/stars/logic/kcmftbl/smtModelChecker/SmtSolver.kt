@@ -77,10 +77,10 @@ fun smtSolverVersion(solver: SmtSolver): String {
   val result = proc.inputReader().readText() + proc.errorReader().readText()
   return when (solver) {
     SmtSolver.CVC5 -> {
-      result.lines().first().removePrefix("This is ").dropLastWhile { it != '[' }.dropLast(2)
+      result.lines().first().removePrefix("This is ").dropLastWhile { it != '[' }.dropLast(2).removePrefix("cvc5 version ")
     }
-    SmtSolver.Z3 -> result.dropLastWhile { it != '-' }.dropLast(2)
-    SmtSolver.YICES -> result.lines().first()
+    SmtSolver.Z3 -> result.dropLastWhile { it != '-' }.dropLast(2).removePrefix("Z3 version ")
+    SmtSolver.YICES -> result.lines().first().removePrefix("Yices ")
   }
 }
 
