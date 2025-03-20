@@ -1,5 +1,11 @@
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts
 
+enum class LegendPosition {
+  LOWER_LEFT, LOWER_RIGHT, UPPER_LEFT, UPPER_RIGHT, BEST;
+
+  override fun toString() = super.toString().lowercase().replace('_', ' ')
+}
+
 /** @param outputFile If null the plot will not be saved but displayed on screen */
 fun plotPerf(
     vararg files: String,
@@ -8,6 +14,7 @@ fun plotPerf(
     rmMemPlot: Boolean = false,
     title: String? = null,
     xLabel: String? = null,
+    legendPosition: LegendPosition? = null,
     outputFile: String? = null)
 {
   var args = mutableListOf(*files)
@@ -25,6 +32,9 @@ fun plotPerf(
   }
   if (xLabel != null) {
     args.addAll(0, listOf("--x_label", "\"$xLabel\""))
+  }
+  if (legendPosition != null) {
+    args.addAll(0, listOf("--legend_pos", "\"$legendPosition\""))
   }
   if (outputFile != null) {
     args.addAll(0, listOf("-S", outputFile))
