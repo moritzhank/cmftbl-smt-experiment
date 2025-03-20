@@ -19,9 +19,12 @@
 
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker
 
-import java.io.File
-import java.util.UUID
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.getAbsolutePathFromProjectDir
+import java.io.File
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 /** Captures all supported SMT-Solver. */
 enum class SmtSolver(val solverName: String) {
@@ -44,17 +47,43 @@ fun runSmtSolver(
     solver: SmtSolver = SmtSolver.CVC5,
     removeSmt2File: Boolean = true,
     vararg solverArgs: String,
-    memoryProfilerCallback: ((Long) -> Unit)? = null
-): String {
+    yicesTimeoutInSeconds: Int = 120,
+    memoryProfilerCallback: ((Long) -> Unit)? = null,
+): String? {
   val solverBinPath = requireSolverBinPath(solver)
   val smtTmpDirPath = getAbsolutePathFromProjectDir("_smtTmp")
   File(smtTmpDirPath).mkdir()
   val smt2FilePath = "$smtTmpDirPath${File.separator}${UUID.randomUUID()}.smt2"
   val smt2File = File(smt2FilePath).apply { writeText(program) }
   val proc = ProcessBuilder(solverBinPath, smt2FilePath, *solverArgs).start()
-  memoryProfilerCallback?.invoke(proc.pid())
-  proc.waitFor()
+  // MemoryProfiler should run async
+  GlobalScope.launch {
+    memoryProfilerCallback?.invoke(proc.pid())
+  }
+  // Handle timeout for Yices2
+  if (solver == SmtSolver.YICES) {
+    proc.waitFor(yicesTimeoutInSeconds.toLong(), TimeUnit.SECONDS)
+    if (proc.isAlive) {
+      proc.destroyForcibly().waitFor()
+    }
+  } else {
+    proc.waitFor()
+  }
+  val exitCode = proc.exitValue()
+  // Has run into timeout of Yices2
+  if (solver == SmtSolver.YICES && exitCode == 137) {
+    return null
+  }
+  // Has run into timeout of CVC5
+  if (solver == SmtSolver.CVC5 && exitCode == 134) {
+    return null
+  }
+  require(exitCode == 0)
   val result = proc.inputReader().readText() + proc.errorReader().readText()
+  // Has run into timeout of Z3
+  if (solver == SmtSolver.Z3 && result.startsWith("timeout", true)) {
+    return null
+  }
   if (removeSmt2File) {
     smt2File.delete()
   }

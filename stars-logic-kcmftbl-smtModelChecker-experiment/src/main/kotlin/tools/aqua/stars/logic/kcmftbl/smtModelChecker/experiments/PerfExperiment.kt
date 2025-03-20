@@ -3,13 +3,12 @@ package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 import oshi.SystemInfo
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.SmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.MemoryProfiler
-import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.avgWithoutInvalids
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.getAbsolutePathFromProjectDir
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.runSmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.getDateTimeString
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.smtSolverVersion
 import java.io.File
-import java.util.Locale
+import java.util.*
 import kotlin.math.pow
 import kotlin.time.Duration
 
@@ -35,6 +34,7 @@ abstract class PerfExperiment(val name: String) {
   abstract val memoryProfilerWorkingCond: (MemoryProfiler) -> Boolean
   protected var useMemoryProfiler = true
   protected var memoryProfilerSampleRateMs = 100
+  protected var timeOutInSeconds = 120
 
   abstract fun generateSmtLib(exp: PerfExperimentSetup, solver: SmtSolver, logic: String): String
 
@@ -45,9 +45,12 @@ abstract class PerfExperiment(val name: String) {
     val ramStr = String.format(Locale.ENGLISH, "%.2f", ram)
     val os = "${sysInfo.operatingSystem.family} ${sysInfo.operatingSystem.versionInfo}"
     val result = StringBuilder()
+    val memProfilerState = if (useMemoryProfiler) "on" else "off"
     result.appendLine("# Details for $title")
     result.appendLine("# Date, time: \"${getDateTimeString('.', ':', ", ", false)}\"")
     result.appendLine("# Solver: \"${smtSolverVersion(solver)}\" with logic: \"$logic\"")
+    result.appendLine("# Timeout: ${timeOutInSeconds}s")
+    result.appendLine("# Memory profiler: $memProfilerState with sample rate: ${memoryProfilerSampleRateMs}ms")
     result.appendLine("# CPU: \"$cpu\"")
     result.appendLine("# RAM: \"$ramStr\"")
     result.appendLine("# OS: \"$os\"")
@@ -69,7 +72,6 @@ abstract class PerfExperiment(val name: String) {
     label: String,
     resTime: (Array<Long>) -> String,
     resMaxSolverMemUsageGB: (List<Long>) -> String,
-    terminationCriterion: (Long, Pair<Double, Long>) -> Boolean,
     removeSmt2File: Boolean = true,
   ): String {
     // Run experiment
@@ -79,7 +81,8 @@ abstract class PerfExperiment(val name: String) {
       experiments.forEachIndexed { i, setup ->
         val smtLib = generateSmtLib(setup, solver, logic)
         (0 ..< repetitions).forEach { j ->
-          val result = runSmtSolver(smtLib, solver, removeSmt2File, getStatsArg(solver), *setup.specialSolverArgs(solver)) { pid ->
+          val result = runSmtSolver(smtLib, solver, removeSmt2File, getTimeOutArg(solver, timeOutInSeconds),
+            getStatsArg(solver), *setup.specialSolverArgs(solver), yicesTimeoutInSeconds = timeOutInSeconds) { pid ->
             if (useMemoryProfiler) {
               val memProfiler = MemoryProfiler.start(pid.toInt(), memoryProfilerSampleRateMs)
               if (memoryProfilerWorkingCond(memProfiler)) {
@@ -87,15 +90,15 @@ abstract class PerfExperiment(val name: String) {
               }
             }
           }
+          // Timeout occurred
+          if (result == null) {
+            memoryStats[i][j] = Pair(-1.0, -1L)
+            println("${solver.solverName} timed out for $setup.")
+            return@experiments
+          }
           val resultingTime = extractDurationFromOutput(solver, result).inWholeMilliseconds
           results[i][j] = resultingTime
           println("${solver.solverName} took ${resultingTime}ms for $setup.")
-        }
-        val avgTimeMs = results[i].fold(0L) { acc, elem -> acc + elem} / results[i].size
-        val avgMemUsageB = memoryStats[i].map { it.second }.avgWithoutInvalids()
-        val avgMemUsageP = memoryStats[i].map { it.first }.avgWithoutInvalids()
-        if (terminationCriterion(avgTimeMs, Pair(avgMemUsageP, avgMemUsageB))) {
-          return@experiments
         }
       }
     }
@@ -134,6 +137,15 @@ abstract class PerfExperiment(val name: String) {
     return when(solver) {
       SmtSolver.CVC5, SmtSolver.YICES -> "--stats"
       SmtSolver.Z3 -> "-st"
+    }
+  }
+
+  /** The timeout of Yices2 does not work! */
+  private fun getTimeOutArg(solver: SmtSolver, timeOutInSeconds: Int): String {
+    return when(solver) {
+      SmtSolver.CVC5 -> "--tlimit=${timeOutInSeconds * 1000}"
+      SmtSolver.YICES -> "--timeout=$timeOutInSeconds"
+      SmtSolver.Z3 -> "-T:$timeOutInSeconds"
     }
   }
 

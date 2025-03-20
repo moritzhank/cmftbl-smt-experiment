@@ -11,10 +11,10 @@ def main(args):
         try:
             content = open(inpFile, "r").read()
             contentLines = content.splitlines()
-            color = contentLines[8][10:-1]
-            label = contentLines[9][10:-1]
+            color = contentLines[10][10:-1]
+            label = contentLines[11][10:-1]
             contentF = io.StringIO(content)
-            arr = np.loadtxt(contentF, delimiter=",", skiprows=12)
+            arr = np.loadtxt(contentF, delimiter=",", skiprows=14)
             dataX = arr[:,0]
             dataY1 = arr[:,-2]
             dataY2 = arr[:,-1]

@@ -24,6 +24,7 @@ class SmtDistinctPerformanceTest(useMemProfiler: Boolean = true): PerfExperiment
   init {
     memoryProfilerSampleRateMs = 10
     useMemoryProfiler = useMemProfiler
+    timeOutInSeconds = 120
   }
 
   override val memoryProfilerWorkingCond: (MemoryProfiler) -> Boolean = { memProfiler ->
@@ -62,13 +63,10 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
   val resTimeSLambda : (Array<Long>) -> String = { arr ->
     (arr.fold(0L) { acc, elem -> acc + elem } / (arr.size * 1_000L)).toString()
   }
-  val terminationCriterion: (Long, Pair<Double, Long>) -> Boolean = { timeMs, mem ->
-    timeMs > 60_000
-  }
 
   // Setup
   var rangeOfDistinctStatements = linSpaceArr(2, 2_000, 5).map { SmtDistinctPerformanceSetup(it) }.toMutableList()
-  rangeOfDistinctStatements.addAll(linSpaceArr(2_500, 200_000, 30).map { SmtDistinctPerformanceSetup(it) })
+  rangeOfDistinctStatements.addAll(linSpaceArr(2_500, 2_000_000, 30).map { SmtDistinctPerformanceSetup(it) })
 
   // CVC5
   val cvc5Version = smtSolverVersion(SmtSolver.CVC5)
@@ -80,8 +78,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     "#808080",
     "CVC5 v$cvc5Version",
     resTimeSLambda,
-    resMaxSolverMemUsageGBLambda,
-    terminationCriterion
+    resMaxSolverMemUsageGBLambda
   )
 
   // Z3
@@ -94,8 +91,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     "#034B7B",
     "Z3 v$z3Version",
     resTimeSLambda,
-    resMaxSolverMemUsageGBLambda,
-    terminationCriterion
+    resMaxSolverMemUsageGBLambda
   )
 
   // YICES
@@ -108,8 +104,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     "#44B7C2",
     "Yices v$yicesVersion",
     resTimeSLambda,
-    resMaxSolverMemUsageGBLambda,
-    terminationCriterion
+    resMaxSolverMemUsageGBLambda
   )
 
   val outputFile = "${SmtDistinctPerformanceTest().expFolderPath}/graph_${getDateTimeString()}.png"
