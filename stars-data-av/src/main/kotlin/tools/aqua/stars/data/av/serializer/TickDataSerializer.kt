@@ -47,7 +47,7 @@ object TickDataSerializer : KSerializer<TickData> {
       element<WeatherParameters>("weather")
       element<Daytime>("daytime")
       element<Segment>("segment")
-      element<List<Vehicle>>("vehicle")
+      element<List<Vehicle>>("vehicles")
       element<List<Pedestrian>>("pedestrians")
     }
   }

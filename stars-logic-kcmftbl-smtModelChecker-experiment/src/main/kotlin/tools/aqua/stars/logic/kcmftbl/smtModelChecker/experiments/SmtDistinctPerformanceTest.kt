@@ -72,14 +72,31 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     }
   }
   // Setup
-  val rangeOfDistinctStatements0 = linSpaceArr(2, 2_000, 10).map { SmtDistinctPerformanceSetup(it) }
-  val rangeOfDistinctStatements1 = linSpaceArr(2_000, 500_000, 30).map { SmtDistinctPerformanceSetup(it) }
-  val rangeOfDistinctStatements = rangeOfDistinctStatements0.toMutableList().apply { addAll(rangeOfDistinctStatements1) }
+  val rangeOfDistinctStatementsCVC5 = linSpaceArr(2, 2_000, 10).map { SmtDistinctPerformanceSetup(it) }
+  val rangeOfDistinctStatementsZ3 = rangeOfDistinctStatementsCVC5.toMutableList().apply {
+    addAll(linSpaceArr(2_500, 100_000, 20).map { SmtDistinctPerformanceSetup(it) })
+  }
+  val rangeOfDistinctStatementsYices = rangeOfDistinctStatementsZ3.toMutableList().apply {
+    addAll(linSpaceArr(110_000, 500_000, 10).map { SmtDistinctPerformanceSetup(it) })
+  }
+
+  // CVC5
+  val cvc5Version = smtSolverVersion(SmtSolver.CVC5)
+  val resCVC5 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
+    rangeOfDistinctStatementsCVC5,
+    SmtSolver.CVC5,
+    "UF",
+    3,
+    "#808080",
+    "CVC5 v$cvc5Version (avg. 3x)",
+    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toString() },
+    resMaxSolverMemUsageGBLambda
+  )
 
   // Z3
   val z3Version = smtSolverVersion(SmtSolver.Z3)
   val resZ3 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
-    rangeOfDistinctStatements,
+    rangeOfDistinctStatementsZ3,
     SmtSolver.Z3,
     "UF",
     3,
@@ -92,7 +109,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
   // YICES
   val yicesVersion = smtSolverVersion(SmtSolver.YICES)
   val resYices = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
-    rangeOfDistinctStatements,
+    rangeOfDistinctStatementsYices,
     SmtSolver.YICES,
     "UF",
     3,
@@ -102,18 +119,6 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     resMaxSolverMemUsageGBLambda
   )
 
-  // CVC5
-  val cvc5Version = smtSolverVersion(SmtSolver.CVC5)
-  val resCVC5 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
-    rangeOfDistinctStatements0,
-    SmtSolver.CVC5,
-    "UF",
-    3,
-    "#808080",
-    "CVC5 v$cvc5Version (avg. 3x)",
-    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toString() },
-    resMaxSolverMemUsageGBLambda
-  )
   val outputFile = "${SmtDistinctPerformanceTest().expFolderPath}/graph_${getDateTimeString()}.png"
   plotPerf(resZ3, resYices, resCVC5, title = "Distinct Experiment", xLabel = "Unterschiedliche Individuen",
     legendPosition = LegendPosition.BEST, outputFile = outputFile, rmMemPlot = !useMemProfiler)
