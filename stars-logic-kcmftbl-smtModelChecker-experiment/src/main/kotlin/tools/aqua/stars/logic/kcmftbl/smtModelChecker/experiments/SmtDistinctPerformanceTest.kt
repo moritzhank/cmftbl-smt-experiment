@@ -116,7 +116,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
   )
   val outputFile = "${SmtDistinctPerformanceTest().expFolderPath}/graph_${getDateTimeString()}.png"
   plotPerf(resZ3, resYices, resCVC5, title = "Distinct Experiment", xLabel = "Unterschiedliche Individuen",
-    legendPosition = LegendPosition.BEST, outputFile = outputFile)
+    legendPosition = LegendPosition.BEST, outputFile = outputFile, rmMemPlot = !useMemProfiler)
 }
 
 class SmtDistinctPerformanceArgs(parser: ArgParser) {
