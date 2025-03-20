@@ -50,6 +50,15 @@ object ExperimentLoader {
     return loadSegments(listOf(wrapper), false, 10, true).toList()
   }
 
+  /** Segments are sorted ascending by length. */
+  fun loadTestSegmentsSortedByLength(town: String = "01", seed: String = "2"): List<Segment> {
+    return loadTestSegments(town, seed).sortedBy {
+      val startTick = it.mainInitList.first().currentTick.tickSeconds
+      val endTick = it.mainInitList.last().currentTick.tickSeconds
+      endTick - startTick
+    }
+  }
+
   fun getSeeds(town: String): Array<Int> {
     init()
     return when (town) {

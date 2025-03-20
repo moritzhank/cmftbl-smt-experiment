@@ -4,6 +4,7 @@ import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.mainBody
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.SmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.MemoryProfiler
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.avgWithoutInvalids
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.LegendPosition
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.getDateTimeString
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.linSpaceArr
@@ -55,68 +56,60 @@ class SmtDistinctPerformanceTest(useMemProfiler: Boolean = true): PerfExperiment
 
 fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
   val resMaxSolverMemUsageGBLambda: (List<Long>) -> String = { list ->
-    var numberMinusOne = list.size
-    var acc = 0L
-    list.forEach {
-      if (it != -1L) {
-        acc += it
-        numberMinusOne--
-      }
-    }
-    if (numberMinusOne > 0) {
-      "-1"
-    } else {
-      val resBytes = ((1.0 * acc) / list.size).toLong()
-      val resGB = MemoryProfiler.bytesToGB(resBytes)
-      resGB.toString()
-    }
+    val avg = list.avgWithoutInvalids()
+    if (avg == -1L) "-1" else "${MemoryProfiler.bytesToGB(avg)}"
   }
+  val resTimeSLambda : (Array<Long>) -> String = { arr ->
+    (arr.fold(0L) { acc, elem -> acc + elem } / (arr.size * 1_000L)).toString()
+  }
+  val terminationCriterion: (Long, Pair<Double, Long>) -> Boolean = { timeMs, mem ->
+    timeMs > 60_000
+  }
+
   // Setup
-  val rangeOfDistinctStatementsCVC5 = linSpaceArr(2, 2_000, 10).map { SmtDistinctPerformanceSetup(it) }
-  val rangeOfDistinctStatementsZ3 = rangeOfDistinctStatementsCVC5.toMutableList().apply {
-    addAll(linSpaceArr(2_500, 100_000, 20).map { SmtDistinctPerformanceSetup(it) })
-  }
-  val rangeOfDistinctStatementsYices = rangeOfDistinctStatementsZ3.toMutableList().apply {
-    addAll(linSpaceArr(110_000, 500_000, 10).map { SmtDistinctPerformanceSetup(it) })
-  }
+  var rangeOfDistinctStatements = linSpaceArr(2, 2_000, 5).map { SmtDistinctPerformanceSetup(it) }.toMutableList()
+  rangeOfDistinctStatements.addAll(linSpaceArr(2_500, 200_000, 30).map { SmtDistinctPerformanceSetup(it) })
 
   // CVC5
   val cvc5Version = smtSolverVersion(SmtSolver.CVC5)
   val resCVC5 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
-    rangeOfDistinctStatementsCVC5,
+    rangeOfDistinctStatements,
     SmtSolver.CVC5,
     "UF",
-    3,
+    1,
     "#808080",
-    "CVC5 v$cvc5Version (avg. 3x)",
-    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toString() },
-    resMaxSolverMemUsageGBLambda
+    "CVC5 v$cvc5Version",
+    resTimeSLambda,
+    resMaxSolverMemUsageGBLambda,
+    terminationCriterion
   )
 
   // Z3
   val z3Version = smtSolverVersion(SmtSolver.Z3)
   val resZ3 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
-    rangeOfDistinctStatementsZ3,
+    rangeOfDistinctStatements,
     SmtSolver.Z3,
     "UF",
-    3,
+    1,
     "#034B7B",
-    "Z3 v$z3Version (avg. 3x)",
-    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toLong().toString() },
-    resMaxSolverMemUsageGBLambda
+    "Z3 v$z3Version",
+    resTimeSLambda,
+    resMaxSolverMemUsageGBLambda,
+    terminationCriterion
   )
 
   // YICES
   val yicesVersion = smtSolverVersion(SmtSolver.YICES)
   val resYices = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
-    rangeOfDistinctStatementsYices,
+    rangeOfDistinctStatements,
     SmtSolver.YICES,
     "UF",
-    3,
+    1,
     "#44B7C2",
-    "Yices v$yicesVersion (avg. 3x)",
-    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toString() },
-    resMaxSolverMemUsageGBLambda
+    "Yices v$yicesVersion",
+    resTimeSLambda,
+    resMaxSolverMemUsageGBLambda,
+    terminationCriterion
   )
 
   val outputFile = "${SmtDistinctPerformanceTest().expFolderPath}/graph_${getDateTimeString()}.png"

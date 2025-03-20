@@ -3,6 +3,7 @@ package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 import oshi.SystemInfo
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.SmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.MemoryProfiler
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.avgWithoutInvalids
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.getAbsolutePathFromProjectDir
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.runSmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.scripts.getDateTimeString
@@ -68,26 +69,37 @@ abstract class PerfExperiment(val name: String) {
     label: String,
     resTime: (Array<Long>) -> String,
     resMaxSolverMemUsageGB: (List<Long>) -> String,
+    terminationCriterion: (Long, Pair<Double, Long>) -> Boolean,
     removeSmt2File: Boolean = true,
   ): String {
     // Run experiment
     val results = Array(experiments.size) { Array(repetitions) { -1L } }
     val memoryStats = Array(experiments.size) { Array(repetitions) { Pair(-1.0, -1L) } }
-    experiments.forEachIndexed { i, setup ->
-      val smtLib = generateSmtLib(setup, solver, logic)
-      (0 ..< repetitions).forEach { j ->
-        val result = runSmtSolver(smtLib, solver, removeSmt2File, getStatsArg(solver), *setup.specialSolverArgs(solver)) { pid ->
-          if (useMemoryProfiler) {
-            val memProfiler = MemoryProfiler.start(pid.toInt(), memoryProfilerSampleRateMs)
-            if (memoryProfilerWorkingCond(memProfiler)) {
-              memoryStats[i][j] = Pair(memProfiler.maxSysMemUsagePercent, memProfiler.maxProcMemUsageBytes)
+    run experiments@{
+      experiments.forEachIndexed { i, setup ->
+        val smtLib = generateSmtLib(setup, solver, logic)
+        (0 ..< repetitions).forEach { j ->
+          val result = runSmtSolver(smtLib, solver, removeSmt2File, getStatsArg(solver), *setup.specialSolverArgs(solver)) { pid ->
+            if (useMemoryProfiler) {
+              val memProfiler = MemoryProfiler.start(pid.toInt(), memoryProfilerSampleRateMs)
+              if (memoryProfilerWorkingCond(memProfiler)) {
+                memoryStats[i][j] = Pair(memProfiler.maxSysMemUsagePercent, memProfiler.maxProcMemUsageBytes)
+              }
             }
           }
+          val resultingTime = extractDurationFromOutput(solver, result).inWholeMilliseconds
+          results[i][j] = resultingTime
+          println("${solver.solverName} took ${resultingTime}ms for $setup.")
         }
-        results[i][j] = extractDurationFromOutput(solver, result).inWholeMilliseconds
-        println("${solver.solverName} took ${results[i][j]}ms for $setup.")
+        val avgTimeMs = results[i].fold(0L) { acc, elem -> acc + elem} / results[i].size
+        val avgMemUsageB = memoryStats[i].map { it.second }.avgWithoutInvalids()
+        val avgMemUsageP = memoryStats[i].map { it.first }.avgWithoutInvalids()
+        if (terminationCriterion(avgTimeMs, Pair(avgMemUsageP, avgMemUsageB))) {
+          return@experiments
+        }
       }
     }
+
     // Persist results into csv
     val timeCols = (1..repetitions).fold("") { acc, i -> "$acc\"time$i\", " }.dropLast(2)
     val maxSysMemUsagePCols = (1..repetitions).fold("") { acc, i -> "$acc\"maxSysMemUsage%$i\", " }.dropLast(2)
@@ -95,17 +107,22 @@ abstract class PerfExperiment(val name: String) {
     val csv = StringBuilder()
     csv.appendLine(generateDetailsComment(solver, logic, "\"$name\"-Benchmark", color, label))
     csv.appendLine("\"x\", $timeCols, $maxSysMemUsagePCols, $maxSolverMemUsageBCols, \"resTime\", \"resMaxSolverMemUsageGB\"")
-    experiments.forEachIndexed { i, setup ->
-      val resultTimeCols = (0 ..< repetitions).fold("") { acc, j -> acc + "${results[i][j]}, " }.dropLast(2)
-      val resultMaxSysMemUsagePCols = (0 ..< repetitions).fold("") { acc, j ->
-        acc + "%.2f, ".format(Locale.ENGLISH, memoryStats[i][j].first)
-      }.dropLast(2)
-      val resultMaxSolverMemUsageBCols = (0 ..< repetitions).fold("") { acc, j ->
-        acc + "${memoryStats[i][j].second}, "
-      }.dropLast(2)
-      val r1 = resTime(results[i])
-      val r2 = resMaxSolverMemUsageGB(memoryStats[i].map { it.second })
-      csv.appendLine("${setup.x}, $resultTimeCols, $resultMaxSysMemUsagePCols, $resultMaxSolverMemUsageBCols, $r1, $r2")
+    run timeRows@{
+      experiments.forEachIndexed { i, setup ->
+        if (results[i].any { it == -1L }) {
+          return@timeRows
+        }
+        val resultTimeCols = (0 ..< repetitions).fold("") { acc, j -> acc + "${results[i][j]}, " }.dropLast(2)
+        val resultMaxSysMemUsagePCols = (0 ..< repetitions).fold("") { acc, j ->
+          acc + "%.2f, ".format(Locale.ENGLISH, memoryStats[i][j].first)
+        }.dropLast(2)
+        val resultMaxSolverMemUsageBCols = (0 ..< repetitions).fold("") { acc, j ->
+          acc + "${memoryStats[i][j].second}, "
+        }.dropLast(2)
+        val r1 = resTime(results[i])
+        val r2 = resMaxSolverMemUsageGB(memoryStats[i].map { it.second })
+        csv.appendLine("${setup.x}, $resultTimeCols, $resultMaxSysMemUsagePCols, $resultMaxSolverMemUsageBCols, $r1, $r2")
+      }
     }
     File(expFolderPath).mkdirs()
     val resultCsvFile = File("$expFolderPath${File.separator}${solver.solverName}_${getDateTimeString()}.csv")
