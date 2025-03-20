@@ -66,7 +66,6 @@ if __name__ == "__main__":
     ap.add_argument("--rm_mem_plot", action='store_true', help="Removes memory part from plot")
     ap.add_argument("--title", type=str, default="", help="Title of the plot")
     ap.add_argument("--x_label", type=str, default="", help="Label at the x-axis of the plot")
-    ap.add_argument("--legend_pos", type=str, default="upper left", help="Position of the legend")
     ap.add_argument("-S", "--save", type=str, help="Saves the plot to the specified file")
     args = ap.parse_args()
     main(args)
