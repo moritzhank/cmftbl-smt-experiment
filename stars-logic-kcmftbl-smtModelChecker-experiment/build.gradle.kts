@@ -40,6 +40,13 @@ tasks.distZip {
   }
 }
 
+tasks.clean {
+  delete("../_experiment/")
+  delete("../_smtTmp/")
+  delete("../_formulaSvgs/")
+  delete("../_treeSvgs/")
+}
+
 dependencies {
   implementation(project(":stars-core"))
   implementation(project(":stars-logic-kcmftbl"))
