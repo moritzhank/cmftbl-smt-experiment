@@ -72,11 +72,9 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     }
   }
   // Setup
-//  var rangeOfDistinctStatements0 = linSpaceArr(2, 3_000, 10).map { SmtDistinctPerformanceSetup(it) }
-//  val rangeOfDistinctStatements1 = linSpaceArr(3_000, 100_000, 30).map { SmtDistinctPerformanceSetup(it) }
-//  var rangeOfDistinctStatements = rangeOfDistinctStatements0.toMutableList().apply { addAll(rangeOfDistinctStatements1) }
-  var rangeOfDistinctStatements0 = linSpaceArr(2, 1_000, 5).map { SmtDistinctPerformanceSetup(it) }
-  var rangeOfDistinctStatements = rangeOfDistinctStatements0
+  val rangeOfDistinctStatements0 = linSpaceArr(2, 2_000, 10).map { SmtDistinctPerformanceSetup(it) }
+  val rangeOfDistinctStatements1 = linSpaceArr(2_000, 500_000, 30).map { SmtDistinctPerformanceSetup(it) }
+  val rangeOfDistinctStatements = rangeOfDistinctStatements0.toMutableList().apply { addAll(rangeOfDistinctStatements1) }
 
   // Z3
   val z3Version = smtSolverVersion(SmtSolver.Z3)
@@ -100,7 +98,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     3,
     "#44B7C2",
     "Yices v$yicesVersion (avg. 3x)",
-    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toLong().toString() },
+    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toString() },
     resMaxSolverMemUsageGBLambda
   )
 
@@ -113,7 +111,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
     3,
     "#808080",
     "CVC5 v$cvc5Version (avg. 3x)",
-    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toLong().toString() },
+    { arr -> (arr.fold(0L) { acc, elem -> acc + elem } / arr.size).toString() },
     resMaxSolverMemUsageGBLambda
   )
   val outputFile = "${SmtDistinctPerformanceTest().expFolderPath}/graph_${getDateTimeString()}.png"

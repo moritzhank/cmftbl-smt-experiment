@@ -76,6 +76,6 @@ class MemoryProfiler private constructor(private val pid: Int, val sampleRate: I
 
   companion object {
     fun start(pid: Int, sampleRate: Int = 100) = MemoryProfiler(pid, sampleRate)
-    fun bytesToGB(bytes: Long) = bytes * 10.0.pow(9)
+    fun bytesToGB(bytes: Long) = bytes * 10.0.pow(-9)
   }
 }
