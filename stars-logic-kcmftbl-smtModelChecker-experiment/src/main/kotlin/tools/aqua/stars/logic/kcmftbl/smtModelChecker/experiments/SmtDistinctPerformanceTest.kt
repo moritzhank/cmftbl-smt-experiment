@@ -67,7 +67,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true, timeout: Int =
 
   // Setup
   var rangeOfDistinctStatements = linSpaceArr(2, 2_000, 5).map { SmtDistinctPerformanceSetup(it) }.toMutableList()
-  rangeOfDistinctStatements.addAll(linSpaceArr(2_500, 2_000_000, 30).map { SmtDistinctPerformanceSetup(it) })
+  rangeOfDistinctStatements.addAll(linSpaceArr(2_500, 300_000, 30).map { SmtDistinctPerformanceSetup(it) })
 
   // CVC5
   val cvc5Version = smtSolverVersion(SmtSolver.CVC5)

@@ -8,6 +8,10 @@ import tools.aqua.stars.logic.kcmftbl.dsl.FormulaBuilder.Companion.formula
 import tools.aqua.stars.logic.kcmftbl.dsl.formulaToLatex
 import tools.aqua.stars.logic.kcmftbl.dsl.renderLatexFormula
 import tools.aqua.stars.logic.kcmftbl.dsl.times
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation.generateEvaluation
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.emptyVehicle
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.generateGraphVizCode
+import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.renderTree
 
 val changedLanePred = formula { v: CCB<Vehicle> ->
   binding(term(v * Vehicle::lane)) { l ->
@@ -35,8 +39,8 @@ val nestedUntilPred = formula { v: CCB<Vehicle> ->
 
 
 fun main() {
-  //val evalNode = changedLaneAndHadSpeedBefore.generateEvaluation(emptyVehicle(id = 1), "v", arrayOf(1.0, 2.0, 3.0, 4.0, 5.5))
-  //renderTree(evalNode.generateGraphVizCode())
-  //renderLatexFormula(formulaToLatex(changedLaneAndHadSpeedBefore(CCB<Vehicle>().apply { debugInfo = "v" })))
-  renderLatexFormula(formulaToLatex(changedLanePred(CCB<Vehicle>().apply { debugInfo = "v" })))
+  val evalNode = changedLaneAndHadSpeedBefore.generateEvaluation(emptyVehicle(id = 1), "v", arrayOf(1.0, 2.0, 3.0, 4.0, 5.5))
+  renderTree(evalNode.generateGraphVizCode())
+  renderLatexFormula(formulaToLatex(changedLaneAndHadSpeedBefore(CCB<Vehicle>().apply { debugInfo = "v" })))
+  //renderLatexFormula(formulaToLatex(changedLanePred(CCB<Vehicle>().apply { debugInfo = "v" })))
 }
