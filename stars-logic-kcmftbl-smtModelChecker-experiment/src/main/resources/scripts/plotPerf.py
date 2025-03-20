@@ -37,6 +37,8 @@ def main(args):
         ax1[1].set_ylabel("Max. Speicher-\nbedarf [GB]")
         ax1[1].yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
         ax1[1].grid(axis="y")
+    else:
+        ax1[0].set_xlabel(args.x_label.replace('"', ''))
 
     for parsedFile in parsedFiles:
         ax1[0].plot(parsedFile[0], parsedFile[1], color=parsedFile[3], marker="o", label=parsedFile[4], lw=2, markersize=6)

@@ -1,6 +1,7 @@
 package tools.aqua.stars.logic.kcmftbl.smtModelChecker.experiments
 
 import com.xenomachina.argparser.ArgParser
+import com.xenomachina.argparser.default
 import com.xenomachina.argparser.mainBody
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.SmtSolver
 import tools.aqua.stars.logic.kcmftbl.smtModelChecker.misc.MemoryProfiler
@@ -19,12 +20,12 @@ class SmtDistinctPerformanceSetup(override val x: Int) : PerfExperimentSetup {
 
 }
 
-class SmtDistinctPerformanceTest(useMemProfiler: Boolean = true): PerfExperiment("SmtDistinctPerf") {
+class SmtDistinctPerformanceTest(useMemProfiler: Boolean = true, timeout: Int = 120): PerfExperiment("SmtDistinctPerf") {
 
   init {
     memoryProfilerSampleRateMs = 10
     useMemoryProfiler = useMemProfiler
-    timeOutInSeconds = 120
+    timeOutInSeconds = timeout
   }
 
   override val memoryProfilerWorkingCond: (MemoryProfiler) -> Boolean = { memProfiler ->
@@ -55,13 +56,13 @@ class SmtDistinctPerformanceTest(useMemProfiler: Boolean = true): PerfExperiment
 
 }
 
-fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
+fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true, timeout: Int = 120) {
   val resMaxSolverMemUsageGBLambda: (List<Long>) -> String = { list ->
     val avg = list.avgWithoutInvalids()
     if (avg == -1L) "-1" else "${MemoryProfiler.bytesToGB(avg)}"
   }
   val resTimeSLambda : (Array<Long>) -> String = { arr ->
-    (arr.fold(0L) { acc, elem -> acc + elem } / (arr.size * 1_000L)).toString()
+    (1.0 * (arr.fold(0L) { acc, elem -> acc + elem }) / (arr.size * 1_000L)).toString()
   }
 
   // Setup
@@ -70,7 +71,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
 
   // CVC5
   val cvc5Version = smtSolverVersion(SmtSolver.CVC5)
-  val resCVC5 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
+  val resCVC5 = SmtDistinctPerformanceTest(useMemProfiler, timeout).runExperiment(
     rangeOfDistinctStatements,
     SmtSolver.CVC5,
     "UF",
@@ -83,7 +84,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
 
   // Z3
   val z3Version = smtSolverVersion(SmtSolver.Z3)
-  val resZ3 = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
+  val resZ3 = SmtDistinctPerformanceTest(useMemProfiler, timeout).runExperiment(
     rangeOfDistinctStatements,
     SmtSolver.Z3,
     "UF",
@@ -96,7 +97,7 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
 
   // YICES
   val yicesVersion = smtSolverVersion(SmtSolver.YICES)
-  val resYices = SmtDistinctPerformanceTest(useMemProfiler).runExperiment(
+  val resYices = SmtDistinctPerformanceTest(useMemProfiler, timeout).runExperiment(
     rangeOfDistinctStatements,
     SmtSolver.YICES,
     "UF",
@@ -114,10 +115,13 @@ fun runSmtDistinctPerformanceTest(useMemProfiler: Boolean = true) {
 
 class SmtDistinctPerformanceArgs(parser: ArgParser) {
   val disableMemoryProfiler by parser.flagging("-D", "--disable_memory_profiler", help = "Disable memory profiler")
+  val timeout by parser.storing("-T", "--timeout", help = "Specifies the timeout for the solver in seconds") {
+    this.toInt()
+  }.default(120)
 }
 
 fun main(args: Array<String>) = mainBody {
   ArgParser(args).parseInto(::SmtDistinctPerformanceArgs).run {
-    runSmtDistinctPerformanceTest(!disableMemoryProfiler)
+    runSmtDistinctPerformanceTest(!disableMemoryProfiler, timeout)
   }
 }
