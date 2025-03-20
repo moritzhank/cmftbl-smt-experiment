@@ -43,7 +43,7 @@ def main(args):
         if not args.rm_mem_plot:
             addPlotToLower(ax1[1], parsedFile[0], parsedFile[2], parsedFile[3], parsedFile[4])
 
-    legend = ax1[0].legend(loc="upper left", framealpha=1)
+    legend = ax1[0].legend(loc=args.legend_pos, framealpha=1)
     legend.get_frame().set_edgecolor("black")
     fig.suptitle(args.title)
     fig.tight_layout()
@@ -66,6 +66,7 @@ if __name__ == "__main__":
     ap.add_argument("--rm_mem_plot", action='store_true', help="Removes memory part from plot")
     ap.add_argument("--title", type=str, default="", help="Title of the plot")
     ap.add_argument("--x_label", type=str, default="", help="Label at the x-axis of the plot")
+    ap.add_argument("--legend_pos", type=str, default="upper left", help="Position of the legend")
     ap.add_argument("-S", "--save", type=str, help="Saves the plot to the specified file")
     args = ap.parse_args()
     main(args)
