@@ -26,6 +26,8 @@ interface TreeVisualizationNode {
 
   fun getTVNContent(): String
 
+  fun getTVNColors(): Pair<String, String>? = null
+
   val children: List<TreeVisualizationNode>
 
   fun iterator() = object : Iterator<TreeVisualizationNode> {
@@ -58,7 +60,9 @@ fun TreeVisualizationNode.generateGraphVizCode(): String {
   var nextId = 1
   while (queue.isNotEmpty()) {
     val node = queue.removeFirst()
-    result.append("n${node.first} [label=\"${node.second.getTVNContent()}\"];")
+    val colorsOfNode = node.second.getTVNColors()
+    val colorAppendix = if (colorsOfNode == null) "" else ", color=${colorsOfNode.first}, fontcolor=${colorsOfNode.second}"
+    result.append("n${node.first} [label=\"${node.second.getTVNContent()}\"$colorAppendix];")
     node.second.children.forEach {
       val childID = nextId++
       queue.add(Pair(childID, it))
@@ -71,17 +75,17 @@ fun TreeVisualizationNode.generateGraphVizCode(): String {
 
 /** Generate an SVG of the input tree. */
 fun renderTree(graphviz: String, deletePrevSvgs: Boolean = true) {
-  val formulaImgs = getAbsolutePathFromProjectDir("_treeSvgs")
-  File(formulaImgs)
+  val treeImgs = getAbsolutePathFromProjectDir("_treeSvgs")
+  File(treeImgs)
       .apply {
         if (deletePrevSvgs) {
           deleteRecursively()
         }
       }
       .mkdir()
-  val encodedLatex = URLEncoder.encode(graphviz, "utf-8")
-  val url = URI("https://quickchart.io/graphviz?graph=$encodedLatex").toURL()
+  val encodedGraphviz = URLEncoder.encode(graphviz, "utf-8")
+  val url = URI("https://quickchart.io/graphviz?graph=$encodedGraphviz").toURL()
   val imageData = url.readBytes()
-  val imageFilePath = "$formulaImgs${File.separator}${UUID.randomUUID()}.svg"
+  val imageFilePath = "$treeImgs${File.separator}${UUID.randomUUID()}.svg"
   File(imageFilePath).apply { writeBytes(imageData) }
 }

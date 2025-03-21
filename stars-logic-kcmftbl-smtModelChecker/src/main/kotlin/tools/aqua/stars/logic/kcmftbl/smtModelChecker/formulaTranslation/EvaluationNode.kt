@@ -78,15 +78,49 @@ data class WitnessEvalNode(
 
 data class OrgaEvalNode(
   override val debugInfo: String,
-  override val children: MutableList<EvaluationNode>,
-  override val emittedID: String?,
-  val referenceCCB: CCB<*>? = null
+  override val children: MutableList<EvaluationNode>
 ): EvaluationNode {
 
-  override val emissionType: EmissionType = if(emittedID == null) EmissionType.NONE else EmissionType.DECLARE_CONST
+  override val emittedID: String? = null
+  override val emissionType: EmissionType = EmissionType.NONE
 
   override fun getTVNContent(): String {
-    return "ORGA ($debugInfo)\\n" + if (emittedID != null) "Emits DEC_CONST with ID: $emittedID\\n" else ""
+    return "ORGA ($debugInfo)\\n"
+  }
+
+  override fun getTVNColors(): Pair<String, String>? = Pair("black", "gray")
+
+}
+
+data class RootNode(
+  override val children: MutableList<EvaluationNode>,
+  override val emittedID: String,
+  val predicateVarWithID: Pair<CCB<*>, Int>
+): EvaluationNode {
+
+  override val debugInfo: String = "${predicateVarWithID.first.debugInfo ?: "?"}[id=${predicateVarWithID.second}]"
+
+  override val emissionType: EmissionType = EmissionType.DECLARE_CONST
+
+  override fun getTVNContent(): String {
+    return "ROOT ($debugInfo)\\nEmits DEC_CONST with ID: $emittedID\\n"
+  }
+
+}
+
+data class VarIntroNode(
+  override val children: MutableList<EvaluationNode>,
+  override val emittedID: String,
+  val referenceCCB: CCB<*>,
+  val varID: Int
+): EvaluationNode {
+
+  override val debugInfo: String = referenceCCB.debugInfo ?: "?"
+
+  override val emissionType: EmissionType = EmissionType.DECLARE_CONST
+
+  override fun getTVNContent(): String {
+    return "VAR_INTRO ($debugInfo)\\nEmits DEC_CONST with ID: $emittedID\\nVarID: $varID\\n"
   }
 
 }

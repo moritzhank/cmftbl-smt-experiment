@@ -3,22 +3,19 @@ package tools.aqua.stars.logic.kcmftbl.smtModelChecker.formulaTranslation
 import tools.aqua.stars.core.types.EntityType
 import tools.aqua.stars.logic.kcmftbl.dsl.*
 
-fun <T: EntityType<*, *, *, *, *>>
-        ((CallContextBase<T>) -> FormulaBuilder).generateEvaluation(
+fun <T: EntityType<*, *, *, *, *>> ((CallContextBase<T>) -> FormulaBuilder).generateEvaluation(
   holdsFor: T,
   name: String,
-  ticks: Array<Double>
+  ticks: Array<Double>,
+  evalInstance: EvaluationInstance = EvaluationInstance()
 ) : EvaluationNode {
-  val evalInstance = EvaluationInstance()
   val ccb = CCB<T>().apply { debugInfo = name }
-  // TODO: WHAT ABOUT holdsFor? -> Has to be added assertion that id is equal
-  // TODO: HOW TO RETURN EVALUATION INSTANCE?
   val ccbSMTName = "predv_${evalInstance.generateID()}"
-  evalInstance.addIntroducedBaseVariable(ccb, ccbSMTName)
   val formula = this(ccb).getPhi().first()
   val evalInnerNode = formula.generateEvaluation(evalInstance, EvaluationType.EVALUATE, null, 0, null, null)
+  evalInstance.predicateIds[ccb] = holdsFor.id
   eliminateUniversalQuantification(evalInstance, evalInnerNode, ticks)
-  return OrgaEvalNode("UnaryPredicate (${ccb.debugInfo})", mutableListOf(evalInnerNode), ccbSMTName)
+  return RootNode(mutableListOf(evalInnerNode), ccbSMTName, Pair(ccb, holdsFor.id))
 }
 
 /** Generates an [EvaluationNode] from a [Term]. */

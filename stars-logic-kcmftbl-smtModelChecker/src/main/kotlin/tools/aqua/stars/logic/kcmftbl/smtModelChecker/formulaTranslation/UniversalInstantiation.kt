@@ -34,13 +34,14 @@ private fun instantiateUniversalQuantification(
     var newNode = f.generateEvaluation(evalInstance, EvaluationType.EVALUATE, null, it.first, null,
       node.tickPrecondition)
     getUsedUnboundVariables(evalInstance, newNode).forEach {
-      newNode = OrgaEvalNode("UINST_VAR ($it)", mutableListOf(newNode), "uinst_${evalInstance.generateID()}", it)
+      val predID = evalInstance.predicateIds[it]!!
+      newNode = VarIntroNode(mutableListOf(newNode), "uinst_${evalInstance.generateID()}", it, predID)
     }
     instantiatedNodes.add(newNode)
   }
   val childIndex = parent.children.indexOf(node)
   parent.children.removeAt(childIndex)
-  parent.children.add(childIndex, OrgaEvalNode("UNIV_INST", instantiatedNodes, null))
+  parent.children.add(childIndex, OrgaEvalNode("UNIV_INST", instantiatedNodes))
 }
 
 private fun getUsedUnboundVariables(evalInstance: EvaluationInstance, node: EvaluationNode): Set<CCB<*>> {

@@ -14,13 +14,8 @@ class EvaluationInstance {
    */
   private val boundVariables = mutableSetOf<CCB<*>>()
 
-  /**
-   * Primarily used such that nodes, other than [WitnessEvalNode], representing variables are interpreted as
-   * [ConstEvalNode].
-   * TODO: Needs further design if nested formulas are introduced.
-   * TODO: NOT NEEDED?!?!?
-   */
-  private val otherIntroducedVars = mutableSetOf<CCB<*>>()
+  /** Captures the ids of the object from the top-level predicate definition. */
+  val predicateIds = mutableMapOf<CCB<*>, Int>()
 
   private val variableToSMTName = mutableMapOf<CCB<*>, String>()
 
@@ -36,22 +31,5 @@ class EvaluationInstance {
     boundVariables.add(ccb)
     variableToSMTName[ccb] = smtName
   }
-
-  /** See description of [otherIntroducedVars]. */
-  // TODO: NOT NEEDED?!?!?
-  fun hasIntroducedBaseVariable(variable: Variable<*>): Boolean {
-    return otherIntroducedVars.contains(variable.callContext.base())
-  }
-
-  /** See description of [otherIntroducedVars]. */
-  // TODO: NOT NEEDED?!?!?
-  fun addIntroducedBaseVariable(ccb: CCB<*>, smtName: String) {
-    otherIntroducedVars.add(ccb)
-    variableToSMTName[ccb] = smtName
-  }
-
-  /** Note: Throws error if bound variable is not previously saved.  */
-  // TODO: NOT NEEDED?!?!?
-  fun getBaseVariableSMTName(ccb: CCB<*>) = variableToSMTName[ccb]!!
 
 }
